@@ -141,12 +141,12 @@ void statusCallback(KeySearchStatus info)
     const char *formatStr = NULL;
 
     if(_config.follow) {
-        formatStr = "%s/%sMB | %s %s %s %s\n";
+        formatStr = "%s/%sMB | %s %s %s %s %s\n";
     } else {
-        formatStr = "\r%s/%sMB | %s %s %s %s";
+        formatStr = "\r%s/%sMB | %s %s %s %s %s";
     }
 
-	printf(formatStr, usedMemStr.c_str(), totalMemStr.c_str(), targetStr.c_str(), speedStr.c_str(), remainStr.c_str(), etaStr.c_str());
+	printf(formatStr, usedMemStr.c_str(), totalMemStr.c_str(), targetStr.c_str(), speedStr.c_str(), remainStr.c_str(), timeStr.c_str(), etaStr.c_str());
 
     if(_config.checkpointFile.length() > 0) {
         uint64_t t = util::getSystemTime();
