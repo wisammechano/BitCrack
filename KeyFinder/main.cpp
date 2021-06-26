@@ -116,7 +116,12 @@ void statusCallback(KeySearchStatus info)
 		speedStr = util::format("%.2f", info.speed) + " MKey/s";
 	}
 
+    uint64_t leftSize = (_config.endKey - _config.nextKey).toUint64();
+
+    uint64_t leftKeys = (leftSize / _config.stride.toUint64() + leftSize % _config.stride.toUint64()) - info.total;
+
 	std::string totalStr = "(" + util::formatThousands(_config.totalkeys + info.total) + " total)";
+    std::string remainStr = "(" + util::formatThousands(leftKeys) + " remaining)";
 
 	std::string timeStr = "[" + util::formatSeconds((unsigned int)((_config.elapsed + info.totalTime) / 1000)) + "]";
 
@@ -126,6 +131,8 @@ void statusCallback(KeySearchStatus info)
 
     std::string targetStr = util::format(info.targets) + " target" + (info.targets > 1 ? "s" : "");
 
+    std::string etaStr = "[ETA " + util::formatEta(leftKeys / (info.speed * 1000000)) + "]";
+
 
 	// Fit device name in 16 characters, pad with spaces if less
 	std::string devName = info.deviceName.substr(0, 16);
@@ -134,17 +141,23 @@ void statusCallback(KeySearchStatus info)
     const char *formatStr = NULL;
 
     if(_config.follow) {
-        formatStr = "%s %s/%sMB | %s %s %s %s\n";
+        formatStr = "%s/%sMB | %s %s %s %s\n";
     } else {
-        formatStr = "\r%s %s / %sMB | %s %s %s %s";
+        formatStr = "\r%s/%sMB | %s %s %s %s";
     }
 
-	printf(formatStr, devName.c_str(), usedMemStr.c_str(), totalMemStr.c_str(), targetStr.c_str(), speedStr.c_str(), totalStr.c_str(), timeStr.c_str());
+	printf(formatStr, usedMemStr.c_str(), totalMemStr.c_str(), targetStr.c_str(), speedStr.c_str(), remainStr.c_str(), etaStr.c_str());
 
     if(_config.checkpointFile.length() > 0) {
         uint64_t t = util::getSystemTime();
         if(t - _lastUpdate >= _config.checkpointInterval) {
-            Logger::log(LogLevel::Info, "Checkpoint");
+            if (_config.follow) {
+                Logger::log(LogLevel::Info, "Checkpoint");
+            }
+            else {
+                printf("\n");
+                Logger::log(LogLevel::Info, "Checkpoint");
+            }
             writeCheckpoint(info.nextKey);
             _lastUpdate = t;
         }
@@ -360,7 +373,7 @@ void readCheckpointFile()
         _config.elapsed = util::parseUInt32(entries["elapsed"].value);
     }
     if(entries.find("stride") != entries.end()) {
-        _config.stride = util::parseUInt64(entries["stride"].value);
+        _config.stride = secp256k1::uint256(entries["stride"].value);
     }
 
     _config.totalkeys = (_config.nextKey - _config.startKey).toUint64();
@@ -373,10 +386,24 @@ int run()
         return 1;
     }
 
+    uint64_t spaceSize = (_config.endKey - _config.startKey).toUint64();
+    uint64_t leftSize = (_config.endKey - _config.nextKey).toUint64();
+
+    uint64_t totalKeys = spaceSize / _config.stride.toUint64() + spaceSize % _config.stride.toUint64();
+    uint64_t leftKeys = leftSize / _config.stride.toUint64() + leftSize % _config.stride.toUint64();
+
     Logger::log(LogLevel::Info, "Compression: " + getCompressionString(_config.compression));
-    Logger::log(LogLevel::Info, "Starting at: " + _config.nextKey.toString());
+    if (_config.nextKey.cmp(_config.startKey) > 0) {
+        Logger::log(LogLevel::Info, "Started at:  " + _config.startKey.toString());
+        Logger::log(LogLevel::Info, "Next at:     " + _config.nextKey.toString());
+    }
+    else {
+        Logger::log(LogLevel::Info, "Starting at: " + _config.nextKey.toString());
+    }
     Logger::log(LogLevel::Info, "Ending at:   " + _config.endKey.toString());
     Logger::log(LogLevel::Info, "Counting by: " + _config.stride.toString());
+    Logger::log(LogLevel::Info, "Total Keys:  " + std::to_string(totalKeys));
+    Logger::log(LogLevel::Info, "Left Keys:   " + std::to_string(leftKeys));
 
     try {
 

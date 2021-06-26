@@ -245,6 +245,7 @@ void KeyFinder::run()
 
 		// Stop if we searched the entire range
         if(_device->getNextKey().cmp(_endKey) >= 0 || _device->getNextKey().cmp(_startKey) < 0) {
+			printf("\n");
             Logger::log(LogLevel::Info, "Reached end of keyspace");
             _running = false;
         }

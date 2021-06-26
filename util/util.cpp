@@ -152,6 +152,42 @@ namespace util {
 		return std::string(s);
 	}
 
+	std::string formatEta(uint64_t n) {
+		const unsigned int secondsInMinute = 60;
+		const unsigned int secondsInHour = 60 * secondsInMinute;
+		const unsigned int secondsInDay = 24 * secondsInHour;
+		const unsigned long secondsInMonth = 365.25 / 12 * secondsInDay;
+		const unsigned long secondsInYear = 365.25 * secondsInDay;
+		const unsigned long secondsInCentury = 100 * secondsInYear;
+
+		uint64_t centuries = n / secondsInCentury;
+		n %= secondsInCentury;
+
+		if (centuries > 0) return "100+ years";
+
+		int years = n / secondsInYear;
+		n %= secondsInYear;
+
+		if (years > 0) return years + " years";
+
+		int months = n / secondsInMonth;
+		n %= secondsInMonth;
+
+		if (months > 0) return months + " months";
+
+		int days = n / secondsInDay;
+		n %= secondsInDay;
+
+		int hours = n / secondsInHour;
+		n %= secondsInHour;
+
+		int minutes = n / secondsInMinute;
+		n %= secondsInMinute;
+		
+		return std::to_string(days) + "D " + std::to_string(hours) + "H " + std::to_string(minutes) + "M " + std::to_string(n) + "S";
+		 
+	}
+
 	long getFileSize(const std::string &fileName)
 	{
 		FILE *fp = fopen(fileName.c_str(), "rb");
