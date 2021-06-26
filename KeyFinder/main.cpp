@@ -402,8 +402,8 @@ int run()
     }
     Logger::log(LogLevel::Info, "Ending at:   " + _config.endKey.toString());
     Logger::log(LogLevel::Info, "Counting by: " + _config.stride.toString());
-    Logger::log(LogLevel::Info, "Total Keys:  " + std::to_string(totalKeys));
-    Logger::log(LogLevel::Info, "Left Keys:   " + std::to_string(leftKeys));
+    Logger::log(LogLevel::Info, "Total Keys:  " + util::formatThousands(totalKeys));
+    Logger::log(LogLevel::Info, "Left Keys:   " + util::formatThousands(leftKeys));
 
     try {
 
