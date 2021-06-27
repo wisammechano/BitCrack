@@ -168,12 +168,12 @@ namespace util {
 		int years = n / secondsInYear;
 		n %= secondsInYear;
 
-		if (years > 0) return years + " years";
+		if (years > 0) return std::to_string(years) + " years";
 
 		int months = n / secondsInMonth;
 		n %= secondsInMonth;
 
-		if (months > 0) return months + " months";
+		if (months > 0) return std::to_string(months) + " months";
 
 		int days = n / secondsInDay;
 		n %= secondsInDay;
