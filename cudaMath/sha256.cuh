@@ -27,7 +27,15 @@ __constant__ unsigned int _IV[8] = {
 	0x5be0cd19
 };
 
+#define CH(x, y, z)     ((x & (y ^ z)) ^ z)
+#define MAJ(x, y, z)    ((x & (y | z)) | (y & z))
+#define rotr(x, n)      ((x >> n) | (x << (32 - n)))
+#define S0(x)           (rotr(x, 2) ^ rotr(x, 13) ^ rotr(x, 22))
+#define S1(x)           (rotr(x, 6) ^ rotr(x, 11) ^ rotr(x, 25))
+#define s0(x)           (rotr(x, 7) ^ rotr(x, 18) ^ (x >> 3))
+#define s1(x)           (rotr(x, 17) ^ rotr(x, 19) ^ (x >> 10))
 
+/*
 __device__ __forceinline__ unsigned int rotr(unsigned int x, int n)
 {
 	return (x >> n) ^ (x << (32 - n));
@@ -52,7 +60,7 @@ __device__ __forceinline__ unsigned int s1(unsigned int x)
 {
 	return rotr(x, 17) ^ rotr(x, 19) ^ (x >> 10);
 }
-
+*/
 
 __device__ __forceinline__ void roundSha256(unsigned int a, unsigned int b, unsigned int c, unsigned int &d, unsigned int e, unsigned int f, unsigned int g, unsigned int &h, unsigned int m, unsigned int k)
 {

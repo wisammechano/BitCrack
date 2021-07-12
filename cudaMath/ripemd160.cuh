@@ -24,7 +24,22 @@ __constant__ unsigned int _K5 = 0x6d703ef3;
 __constant__ unsigned int _K6 = 0x5c4dd124;
 __constant__ unsigned int _K7 = 0x50a28be6;
 
+#define CH(x, y, z)     ((x & (y ^ z)) ^ z)
+#define MAJ(x, y, z)    ((x & (y | z)) | (y & z))
+#define rotr(x, n)      ((x >> n) | (x << (32 - n)))
+#define S0(x)           (rotr(x, 2) ^ rotr(x, 13) ^ rotr(x, 22))
+#define S1(x)           (rotr(x, 6) ^ rotr(x, 11) ^ rotr(x, 25))
+#define s0(x)           (rotr(x, 7) ^ rotr(x, 18) ^ (x >> 3))
+#define s1(x)           (rotr(x, 17) ^ rotr(x, 19) ^ (x >> 10))
 
+#define rotl(x,n)       ((x << n) | (x >> (32 - n)))
+#define F(x,y,z)        (x ^ y ^ z)
+#define G(x,y,z)        (((x) & (y)) | (~(x) & (z)))
+#define H(x,y,z)        (((x) | ~(y)) ^ (z))
+#define I(x,y,z)        (((x)& (z)) | ((y) & ~(z)))
+#define J(x,y,z)        ((x) ^ ((y) | ~(z)))
+
+/*
 __device__ __forceinline__ unsigned int rotl(unsigned int x, int n)
 {
 	return (x << n) | (x >> (32 - n));
@@ -54,7 +69,7 @@ __device__ __forceinline__ unsigned int J(unsigned int x, unsigned int y, unsign
 {
 	return  ((x) ^ ((y) | ~(z)));
 }
-
+*/
 __device__ __forceinline__ void FF(unsigned int &a, unsigned int &b, unsigned int &c, unsigned int &d, unsigned int &e, unsigned int x, unsigned int s)
 {
 	a += F(b, c, d) + x;
