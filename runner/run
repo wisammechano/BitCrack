@@ -1,78 +1,130 @@
 #!/bin/bash
 
-# Ensure the user provided the required arguments
-if [ $# -lt 1 ]; then
-    echo "Usage: $0 <number> [--share <value>] [additional options]"
+# Usage message function
+show_usage() {
+    echo "Usage: $0 <number> [-s <value>] [additional options]"
+    echo "Arguments:"
+    echo "  <number>            Number of Bits to crack"
+    echo "  -s <value>          Optional share value (must be <= 10000)"
+    echo "  additional options  Additional arguments passed to the command"
     exit 1
-fi
+}
 
-# Read the first argument as the number
-NUMBER=$1
-# Shift to the next argument (which could include --share)
-shift
-ADDITIONAL_ARGS=""
+# Function to validate and set the share value
+set_share_value() {
+    local share="$1"
+    if [[ "$share" =~ ^[0-9]+$ ]]; then
+        if [ "$share" -le 10 ]; then
+            SHARE_VALUE="${share}/10"
+        elif [ "$share" -le 100 ]; then
+            SHARE_VALUE="${share}/100"
+        elif [ "$share" -le 1000 ]; then
+            SHARE_VALUE="${share}/1000"
+        elif [ "$share" -le 10000 ]; then
+            SHARE_VALUE="${share}/10000"
+        else
+            echo "Error: Share value must be <= 10000."
+            exit 1
+        fi
+    else
+        echo "Error: --share requires a numeric value."
+        exit 1
+    fi
+}
 
-# Initialize share variable
-SHARE_VALUE=""
-SHARE=""
-CWD=$(pwd)
-
-# Process the remaining arguments
-while (( "$#" )); do
-    case "$1" in
-        --share)
-            if [ -n "$2" ] && [[ "$2" =~ ^[0-9]+$ ]]; then
-                # Convert share value to the appropriate format
-                SHARE="$2"
-                if [ "$SHARE" -le 10 ]; then
-                    SHARE_VALUE="${SHARE}/10"
-                elif [ "$SHARE" -le 100 ]; then
-                    SHARE_VALUE="${SHARE}/100"
-                elif [ "$SHARE" -le 1000 ]; then
-                    SHARE_VALUE="${SHARE}/1000"
-                elif [ "$SHARE" -le 10000 ]; then
-                    SHARE_VALUE="${SHARE}/10000"
+# Function to parse and process arguments
+parse_arguments() {
+    if [ $# -lt 1 ]; then
+        show_usage
+    fi
+    
+    BITS=$1
+    shift
+    
+    while (( "$#" )); do
+        case "$1" in
+            -s)
+                if [ -n "$2" ]; then
+                    set_share_value "$2"
+                    shift 2
                 else
-                    echo "Error: share value must be <= 10000."
+                    echo "Error: -s requires a value."
                     exit 1
                 fi
-                shift 2  # Skip the next argument since it's the value for --share
-            else
-                echo "Error: --share requires a numeric value."
-                exit 1
-            fi
-            ;;
-        *)
-            ADDITIONAL_ARGS="$ADDITIONAL_ARGS $1"
-            shift
-            ;;
-    esac
-done
+                ;;
+            *)
+                ADDITIONAL_ARGS="$ADDITIONAL_ARGS $1"
+                shift
+                ;;
+        esac
+    done
+}
 
-# Find the line in params.txt that starts with the given number
-PARAMS=$(grep "^$NUMBER " params.txt)
+# Function to extract parameters from params.txt based on the given number
+extract_params() {
+    local params=$(grep "^$BITS " params.txt)
+    
+    if [ -z "$params" ]; then
+        echo "No parameters found for number $BITS"
+        exit 1
+    fi
+    
+    ADDRESS=$(echo "$params" | awk '{print $2}')
+    KEYSPACE=$(echo "$params" | awk '{print $3}')
+}
 
-# Check if the params were found
-if [ -z "$PARAMS" ]; then
-    echo "No parameters found for number $NUMBER"
-    exit 1
-fi
+# Function to initialize directories and paths
+initialize_paths() {
+    CWD=$(pwd)
+    SHARE=$(echo "$SHARE_VALUE" | awk -F'/' '{print $1}')
+    
+    DATA_DIR="${CWD}/data"
+    OUT_FILE="${DATA_DIR}/out${BITS}.txt"
+    CP_FILE="${DATA_DIR}/cp-${BITS}-${SHARE}.txt"
+    PARAMS_FILE="${DATA_DIR}/params.txt"
+}
 
-# Extract address and keyspace from the line
-ADDRESS=$(echo "$PARAMS" | awk '{print $2}')
-KEYSPACE=$(echo "$PARAMS" | awk '{print $3}')
+# Function to build the command with the provided parameters
+build_command() {
+    COMMAND="$BIN_PATH $ADDRESS -c -o $OUT_FILE -b $D_BLOCKS -t $D_THREADS -p $D_POINTS --keyspace $KEYSPACE --continue $CP_FILE"
+    
+    # Append share if provided
+    if [ -n "$SHARE_VALUE" ]; then
+        COMMAND="$COMMAND --share $SHARE_VALUE"
+    fi
+    
+    # Append additional arguments
+    COMMAND="$COMMAND $ADDITIONAL_ARGS"
+}
 
-# Construct the command
-COMMAND="../bin/cuBitCrack $ADDRESS -c -o ../${CWD}/out${NUMBER}.txt -b 512 -t 256 -p 1024 --keyspace $KEYSPACE --continue ../${CWD}/cp-${NUMBER}-${SHARE}.txt"
+# Function to execute the constructed command
+execute_command() {
+    echo "Running command: $COMMAND"
+    eval "$COMMAND"
+}
 
-# Append the share value if set
-if [ -n "$SHARE_VALUE" ]; then
-    COMMAND="$COMMAND --share $SHARE_VALUE"
-fi
+# Main script execution
+main() {
+    BIN_PATH="../bin/cuBitCrack"
+    
+    # Initialize constants
+    D_BLOCKS=512
+    D_THREADS=256
+    D_POINTS=1024
+    
+    # Parse and validate arguments
+    parse_arguments "$@"
 
-# Append any additional arguments
-COMMAND="$COMMAND $ADDITIONAL_ARGS"
+    # Initialize output and checkpoint file paths
+    initialize_paths
+    
+    # Extract address and keyspace for the given number
+    extract_params
+    
+    # Construct and execute the command
+    build_command
+    execute_command
+}
 
-# Print and execute the command
-echo "Running command: $COMMAND"
-eval $COMMAND
+# Run main with all arguments
+main "$@"
