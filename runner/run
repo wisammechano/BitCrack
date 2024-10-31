@@ -1,0 +1,78 @@
+#!/bin/bash
+
+# Ensure the user provided the required arguments
+if [ $# -lt 1 ]; then
+    echo "Usage: $0 <number> [--share <value>] [additional options]"
+    exit 1
+fi
+
+# Read the first argument as the number
+NUMBER=$1
+# Shift to the next argument (which could include --share)
+shift
+ADDITIONAL_ARGS=""
+
+# Initialize share variable
+SHARE_VALUE=""
+SHARE=""
+CWD=$(pwd)
+
+# Process the remaining arguments
+while (( "$#" )); do
+    case "$1" in
+        --share)
+            if [ -n "$2" ] && [[ "$2" =~ ^[0-9]+$ ]]; then
+                # Convert share value to the appropriate format
+                SHARE="$2"
+                if [ "$SHARE" -le 10 ]; then
+                    SHARE_VALUE="${SHARE}/10"
+                elif [ "$SHARE" -le 100 ]; then
+                    SHARE_VALUE="${SHARE}/100"
+                elif [ "$SHARE" -le 1000 ]; then
+                    SHARE_VALUE="${SHARE}/1000"
+                elif [ "$SHARE" -le 10000 ]; then
+                    SHARE_VALUE="${SHARE}/10000"
+                else
+                    echo "Error: share value must be <= 10000."
+                    exit 1
+                fi
+                shift 2  # Skip the next argument since it's the value for --share
+            else
+                echo "Error: --share requires a numeric value."
+                exit 1
+            fi
+            ;;
+        *)
+            ADDITIONAL_ARGS="$ADDITIONAL_ARGS $1"
+            shift
+            ;;
+    esac
+done
+
+# Find the line in params.txt that starts with the given number
+PARAMS=$(grep "^$NUMBER " params.txt)
+
+# Check if the params were found
+if [ -z "$PARAMS" ]; then
+    echo "No parameters found for number $NUMBER"
+    exit 1
+fi
+
+# Extract address and keyspace from the line
+ADDRESS=$(echo "$PARAMS" | awk '{print $2}')
+KEYSPACE=$(echo "$PARAMS" | awk '{print $3}')
+
+# Construct the command
+COMMAND="../bin/cuBitCrack $ADDRESS -c -o ../${CWD}/out${NUMBER}.txt -b 512 -t 256 -p 1024 --keyspace $KEYSPACE --continue ../${CWD}/cp-${NUMBER}-${SHARE}.txt"
+
+# Append the share value if set
+if [ -n "$SHARE_VALUE" ]; then
+    COMMAND="$COMMAND --share $SHARE_VALUE"
+fi
+
+# Append any additional arguments
+COMMAND="$COMMAND $ADDITIONAL_ARGS"
+
+# Print and execute the command
+echo "Running command: $COMMAND"
+eval $COMMAND
