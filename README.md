@@ -2,6 +2,13 @@
 
 A tool for brute-forcing Bitcoin private keys. The main purpose of this project is to contribute to the effort of solving the [Bitcoin puzzle transaction](https://blockchain.info/tx/08389f34c98c606322740c0be6a7125d9860bb8d5cb182c02f98461e5fa6cd15): A transaction with 32 addresses that become increasingly difficult to crack.
 
+### main vs master
+`master` branch holds the original code by brichard19. `main` contains most of lamacq's (ByLamacq) optimizations + the new features by wisammechano. 
+
+Mainly:
+
+it fixes the shares and strides from input file
+has eta and other details to output
 
 ### Using BitCrack
 
