@@ -13,7 +13,13 @@ CXX=g++
 CXXFLAGS=-O2 -std=c++11
 
 # CUDA variables
-COMPUTE_CAP=89
+# Default compute capability
+DEFAULT_COMPUTE_CAP=80
+
+# Try to read from environment variable, then nvidia-smi, or use default
+# COMPUTE_CAP=89
+COMPUTE_CAP:=$(if $(USE_COMPUTE_CAP),$(USE_COMPUTE_CAP),$(shell nvidia-smi --query-gpu=compute_cap --format=csv,noheader | head -n 1 || echo $(DEFAULT_COMPUTE_CAP)))
+
 NVCC=nvcc
 NVCCFLAGS=-std=c++11 -gencode=arch=compute_${COMPUTE_CAP},code=\"sm_${COMPUTE_CAP}\" -Xptxas="-v" -Xcompiler "${CXXFLAGS}"
 CUDA_HOME=/usr/local/cuda
