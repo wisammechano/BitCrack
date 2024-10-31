@@ -62,7 +62,7 @@ parse_arguments() {
 
 # Function to extract parameters from params.txt based on the given number
 extract_params() {
-    local params=$(grep "^$BITS " params.txt)
+    local params=$(grep "^$BITS " $PARAMS_FILE)
     
     if [ -z "$params" ]; then
         echo "No parameters found for number $BITS"
@@ -77,7 +77,7 @@ extract_params() {
 initialize_paths() {
     CWD=$(pwd)
     SHARE=$(echo "$SHARE_VALUE" | awk -F'/' '{print $1}')
-    
+
     DATA_DIR="${CWD}/data"
     OUT_FILE="${DATA_DIR}/out${BITS}.txt"
     CP_FILE="${DATA_DIR}/cp-${BITS}-${SHARE}.txt"
