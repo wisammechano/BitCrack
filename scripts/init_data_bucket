@@ -22,7 +22,7 @@ CREDENTIALS_PATH="/tmp/service_account.json"
 # Check if service account file exists if it doesn't download it
 if [ ! -f $CREDENTIALS_PATH ]; then
   echo "Service account file not found. Downloading..."
-  G_SA_PATH="secure/sa_user.json"
+  G_SA_PATH="secure%2Fsa_user.json"
   G_TOKEN_LINK="https://firebasestorage.googleapis.com/v0/b/${G_BUCKET}/o/${G_SA_PATH}?alt=media&token=${G_SA_TOKEN}"
   curl -o $CREDENTIALS_PATH $G_TOKEN_LINK
   if [ $? -ne 0 ]; then
@@ -45,10 +45,12 @@ mkdir -p $MOUNT_PATH
 # Give permission to group
 chmod g+w $MOUNT_PATH
 
+BUCKET_DIR='data'
+
 
 # Mount the bucket
 mkdir -p $MOUNT_PATH
-gcsfuse --key-file=$CREDENTIALS_PATH $G_BUCKET $MOUNT_PATH
+gcsfuse --key-file=$CREDENTIALS_PATH --only-dir $BUCKET_DIR $G_BUCKET $MOUNT_PATH
 
 # Verify mounting
 if mount | grep "gcsfuse" > /dev/null; then
