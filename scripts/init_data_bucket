@@ -1,7 +1,12 @@
 #!/bin/bash
 
-if [[-z "${GOOGLE_BUCKET_NAME}" ]]; then
+if [[ -z "${GOOGLE_BUCKET_NAME}" ]]; then
   echo "ERROR: GOOGLE_BUCKET_NAME environment variable is not set."
+  exit 1
+fi
+
+if [[ -z "${DATA_DIR}" ]]; then
+  echo "ERROR: DATA_DIR environment variable is not set."
   exit 1
 fi
 
@@ -9,7 +14,8 @@ fi
 # Vast.ai only allows 256 characters in an environment variable
 # Service account credentials are split into 12 environment variables as base64 encoded strings
 for i in $(seq 1 12); do
-  if [[ -z "${GOOGLE_SERVICE_ACCT_CREDENTIALS_$i}" ]]; then
+  eval varr=\$GOOGLE_SERVICE_ACCT_CREDENTIALS_$i
+  if [[ -z "$varr" ]]; then
     echo "ERROR: GOOGLE_SERVICE_ACCT_CREDENTIALS_$i environment variable is not set."
     exit 1
   fi
@@ -18,7 +24,8 @@ done
 # Assemble the base64 string of service account credentials
 GOOGLE_SERVICE_ACCT_CONTENTS=""
 for i in $(seq 1 12); do
-    GOOGLE_SERVICE_ACCT_CONTENTS+="${!GOOGLE_SERVICE_ACCT_CREDENTIALS_$i}"
+  eval varr=\$GOOGLE_SERVICE_ACCT_CREDENTIALS_$i
+  GOOGLE_SERVICE_ACCT_CONTENTS+="$varr"
 done
 
 # Servie account credentials path
@@ -28,7 +35,14 @@ CREDENTIALS_PATH="/tmp/service_account.json"
 echo "$GOOGLE_SERVICE_ACCT_CONTENTS" | base64 -d > $CREDENTIALS_PATH
 
 # Mount path
-MOUNT_PATH="./data"
+MOUNT_PATH=$DATA_DIR
+
+# Create Dir
+mkdir -p $MOUNT_PATH
+
+# Give permission to group
+chmod g+w $MOUNT_PATH
+
 
 
 # Initialize gcloud with service account

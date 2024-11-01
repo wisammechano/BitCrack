@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Import Google Cloud public key
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo tee /usr/share/keyrings/cloud.google.asc
+
+# Add the gcsfuse repository
+echo "Adding gcsfuse repository..."
+echo "deb [signed-by=/usr/share/keyrings/cloud.google.asc] https://packages.cloud.google.com/apt gcsfuse-jessie main" | sudo tee /etc/apt/sources.list.d/gcsfuse.list
+
+# Update and install and gcsfuse
+echo "Updating package lists and installing gcsfuse..."
+sudo apt-get update && sudo apt-get install -y gcsfuse
+
+# Verify installation
+echo "Verifying installations..."
+if command -v gcsfuse &> /dev/null; then
+    echo "Installation complete: Google Cloud SDK and gcsfuse are installed."
+else
+    echo "Error: Installation failed for Google Cloud SDK or gcsfuse."
+    exit 1
+fi

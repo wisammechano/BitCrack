@@ -75,10 +75,20 @@ extract_params() {
 
 # Function to initialize directories and paths
 initialize_paths() {
-    CWD=$(pwd)
     SHARE=$(echo "$SHARE_VALUE" | awk -F'/' '{print $1}')
 
-    DATA_DIR="${CWD}/data"
+    if [[ -z "${DATA_DIR}" ]]; then
+      echo "ERROR: DATA_DIR environment variable is not set."
+      exit 1
+    fi
+
+    if [[ -z "${BIN_PATH}" ]]; then
+      echo "ERROR: BIN_PATH environment variable is not set."
+      exit 1
+    fi
+
+    echo "Using data directory: ${DATA_DIR}"
+
     OUT_FILE="${DATA_DIR}/out${BITS}.txt"
     CP_FILE="${DATA_DIR}/cp-${BITS}-${SHARE}.txt"
     PARAMS_FILE="${DATA_DIR}/params.txt"
@@ -105,7 +115,9 @@ execute_command() {
 
 # Main script execution
 main() {
-    BIN_PATH="../bin/cuBitCrack"
+    # Initialized in Dockerfile
+    # DATA_DIR=$DATA_DIR
+    # BIN_PATH=$BIN_PATH
     
     # Initialize constants
     D_BLOCKS=512
