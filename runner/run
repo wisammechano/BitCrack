@@ -2,10 +2,13 @@
 
 # Usage message function
 show_usage() {
-    echo "Usage: $0 <number> [-s <value>] [additional options]"
+    echo "Usage: $0 <number> [-s <value>] [-b <blocks>] [-p <points>] [-t <threads>] [additional options]"
     echo "Arguments:"
     echo "  <number>            Number of Bits to crack"
     echo "  -s <value>          Optional share value (must be <= 10000)"
+    echo "  -b <blocks>         Number of blocks (default: 512)"
+    echo "  -p <points>         Number of points (default: 1024)"
+    echo "  -t <threads>        Number of threads (default: 256)"
     echo "  additional options  Additional arguments passed to the command"
     exit 1
 }
@@ -27,7 +30,7 @@ set_share_value() {
             exit 1
         fi
     else
-        echo "Error: --share requires a numeric value."
+        echo "Error: -s requires a numeric value."
         exit 1
     fi
 }
@@ -41,6 +44,11 @@ parse_arguments() {
     BITS=$1
     shift
     
+    # Set default values for blocks, points, and threads
+    D_BLOCKS=512
+    D_POINTS=1024
+    D_THREADS=256
+    
     while (( "$#" )); do
         case "$1" in
             -s)
@@ -49,6 +57,33 @@ parse_arguments() {
                     shift 2
                 else
                     echo "Error: -s requires a value."
+                    exit 1
+                fi
+                ;;
+            -b)
+                if [[ "$2" =~ ^[0-9]+$ ]]; then
+                    D_BLOCKS="$2"
+                    shift 2
+                else
+                    echo "Error: -b requires a numeric value."
+                    exit 1
+                fi
+                ;;
+            -p)
+                if [[ "$2" =~ ^[0-9]+$ ]]; then
+                    D_POINTS="$2"
+                    shift 2
+                else
+                    echo "Error: -p requires a numeric value."
+                    exit 1
+                fi
+                ;;
+            -t)
+                if [[ "$2" =~ ^[0-9]+$ ]]; then
+                    D_THREADS="$2"
+                    shift 2
+                else
+                    echo "Error: -t requires a numeric value."
                     exit 1
                 fi
                 ;;
@@ -62,7 +97,7 @@ parse_arguments() {
 
 # Function to extract parameters from params.txt based on the given number
 extract_params() {
-    local params=$(grep "^$BITS " $PARAMS_FILE)
+    local params=$(grep "^$BITS " "$PARAMS_FILE")
     
     if [ -z "$params" ]; then
         echo "No parameters found for number $BITS"
@@ -118,11 +153,6 @@ main() {
     # Initialized in Dockerfile
     # DATA_DIR=$DATA_DIR
     # BIN_PATH=$BIN_PATH
-    
-    # Initialize constants
-    D_BLOCKS=512
-    D_THREADS=256
-    D_POINTS=1024
     
     # Parse and validate arguments
     parse_arguments "$@"
