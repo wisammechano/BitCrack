@@ -6,7 +6,7 @@ ln -sf /bin/bash /bin/sh
 export SHELL=/bin/bash
 
 echo "Mounting data dir"
-./scripts/init_data_bucket
+${SCRIPTS_DIR}/init_data_bucket rclone
 
 # Start JupyterLab
 echo "Starting JupyterLab..."

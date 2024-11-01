@@ -1,10 +1,8 @@
 #!/bin/bash
 
-# G_SA_TOKEN: is the file download link token, acquire from firebase storage
-if [[ -z "${G_SA_TOKEN}" ]]; then
-  echo "ERROR: G_SA_TOKEN environment variable is not set."
-  exit 1
-fi
+PROVIDER=${1:-gcsfuse}
+SCRIPT_DIR=${SCRIPTS_DIR:-"$(dirname "$(realpath "$0")")"}
+
 
 if [[ -z "${G_BUCKET}" ]]; then
   echo "ERROR: G_BUCKET environment variable is not set."
@@ -16,46 +14,46 @@ if [[ -z "${DATA_DIR}" ]]; then
   exit 1
 fi
 
-# Servie account credentials path
-CREDENTIALS_PATH="/tmp/service_account.json"
-
-# Check if service account file exists if it doesn't download it
-if [ ! -f $CREDENTIALS_PATH ]; then
-  echo "Service account file not found. Downloading..."
-  G_SA_PATH="secure%2Fsa_user.json"
-  G_TOKEN_LINK="https://firebasestorage.googleapis.com/v0/b/${G_BUCKET}/o/${G_SA_PATH}?alt=media&token=${G_SA_TOKEN}"
-  curl -o $CREDENTIALS_PATH $G_TOKEN_LINK
-  if [ $? -ne 0 ]; then
-    echo "ERROR: Failed to download service account file."
-    exit 1
-  else
-    echo "Service account file downloaded successfully."
-  fi
-else
-  echo "Using existing service account file."
+if [[ ! -d "$DATA_DIR" ]]; then
+    mkdir -p "$DATA_DIR"
 fi
 
+chmod g+w "$DATA_DIR"
 
-# Mount path
-MOUNT_PATH=$DATA_DIR
+# Service account credentials path
+export CREDENTIALS_PATH="/tmp/sa.json"
 
-# Create Dir
-mkdir -p $MOUNT_PATH
+# Check if service account file exists; if not, download it
+if [[ ! -f "$CREDENTIALS_PATH" ]]; then
+  echo "Service account file not found. Downloading..."
+  # Get the directory of the current script
+  "$SCRIPT_DIR"/fetch_service_acct.sh "$CREDENTIALS_PATH"
+fi
 
-# Give permission to group
-chmod g+w $MOUNT_PATH
+# Run the appropriate initialization script based on the provider
+case $PROVIDER in
+  gcsfuse)
+    "$SCRIPT_DIR"/init_gcsfuse.sh
+    ;;
+  
+  rclone)
+    "$SCRIPT_DIR"/init_rclone.sh
+    ;;
+  
+  gcloud)
+    "$SCRIPT_DIR"/init_gcloud.sh
+    ;;
+  
+  *)
+    echo "ERROR: Unknown provider $PROVIDER"
+    exit 1
+    ;;
+esac
 
-BUCKET_DIR='data'
-
-
-# Mount the bucket
-mkdir -p $MOUNT_PATH
-gcsfuse --key-file=$CREDENTIALS_PATH --only-dir $BUCKET_DIR $G_BUCKET $MOUNT_PATH
-
-# Verify mounting
-if mount | grep "gcsfuse" > /dev/null; then
-  echo "Bucket mounted successfully at $MOUNT_PATH"
-else
-  echo "ERROR: Bucket mounting failed."
+# Check exit status of the last command executed
+if [[ $? -ne 0 ]]; then
+  echo "ERROR: Initialization script for $PROVIDER failed."
   exit 1
 fi
+
+echo "Initialization for $PROVIDER completed successfully."

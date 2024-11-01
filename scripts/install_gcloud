@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Ensure required libs installed
+sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates gnupg curl
+
+# Import Google Cloud public key
+curl -sS https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo gpg --dearmor -o /usr/share/keyrings/cloud.google.gpg
+
+# Add the gcloud repository
+echo "Adding gcloud repository..."
+echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+
+# Update and install and gcloud cli
+echo "Updating package lists and installing google-cloud-cli..."
+sudo apt-get update && sudo apt-get install -y google-cloud-cli
+
+# Verify installation
+echo "Verifying installations..."
+if command -v gcloud &> /dev/null; then
+    echo "Installation complete: gcloud is now installed."
+else
+    echo "Error: Installation failed for gcloud."
+    exit 1
+fi

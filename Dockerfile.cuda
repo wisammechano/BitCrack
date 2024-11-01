@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y \
   curl \
   sudo \
   vim \
+  cron \
   nano \
   bash-completion \
   python3 \
@@ -31,7 +32,8 @@ RUN pip install --no-cache-dir jupyterlab
 ENV BUILD_DIR=/app_build \
     APP_DIR=/app \
     DATA_DIR=/app/data \
-    BIN_PATH=/app/bin/cuBitCrack
+    BIN_PATH=/app/bin/cuBitCrack \
+    SCRIPTS_DIR=/app/scripts
 
 # Set the working directory to BUILD_DIR and copy source code
 WORKDIR $BUILD_DIR
@@ -50,8 +52,8 @@ COPY ./scripts ./scripts
 # Make runner and scripts executable
 RUN chmod +x ./run ./scripts/* ./bin/*
 
-# Install Google Cloud SDK using the provided script
-RUN ./scripts/install_gcsfuse
+# Install Rclone using the provided script
+RUN ./scripts/install_rclone
 
 # Expose port 8888 for JupyterLab
 EXPOSE 8888

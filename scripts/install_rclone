@@ -1,0 +1,14 @@
+#!/bin/bash
+
+# Installing Rclone
+echo "Installing Rclone..."
+sudo -v ; curl https://rclone.org/install.sh | sudo bash
+
+# Verify installation
+echo "Verifying installations..."
+if command -v rclone &> /dev/null; then
+    echo "Installation complete: Rclone is now installed."
+else
+    echo "Error: Installation failed for Rclone"
+    exit 1
+fi
