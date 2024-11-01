@@ -44,10 +44,6 @@ mkdir -p $MOUNT_PATH
 chmod g+w $MOUNT_PATH
 
 
-
-# Initialize gcloud with service account
-gcloud auth activate-service-account --key-file=$CREDENTIALS_PATH
-
 # Mount the bucket
 mkdir -p $MOUNT_PATH
 gcsfuse --key-file=$CREDENTIALS_PATH $GOOGLE_BUCKET_NAME $MOUNT_PATH

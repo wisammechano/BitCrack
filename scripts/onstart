@@ -1,0 +1,64 @@
+#!/bin/bash
+
+APP_DIR='/app'
+DATA_DIR='/app/data/'
+SRC_DIR='app/src'
+BIN_PATH='/app/bin/cuBitCrack'
+
+# Variables
+REPO_URL="https://github.com/wisammechano/BitCrack.git"
+CLONE_DIR=$APP_DIR
+
+INSTALL_SCRIPT="${APP_DIR}/scripts/install_gcsfuse"
+INIT_SCRIPT="${APP_DIR}/scripts/init_data_bucket"
+
+# 1. Clone the repository
+echo "Cloning repository from $REPO_URL..."
+git clone "$REPO_URL" "$CLONE_DIR"
+
+# Check if clone was successful
+if [[ $? -ne 0 ]]; then
+    echo "Error: Failed to clone repository."
+    exit 1
+fi
+
+# 2. Checkout main and Change directory to 'src' folder
+echo "Navigating to src directory..."
+cd $CLONE_DIR && git checkout main
+cd "$CLONE_DIR/src" || { echo "Error: src directory not found"; exit 1; }
+
+# 3. Run the build command
+echo "Building BitCrack..."
+make BUILD_CUDA=1
+
+# Check if build was successful
+if [[ $? -ne 0 ]]; then
+    echo "Error: Build failed."
+    exit 1
+fi
+
+# 4. Copy binaries to APP_DIR
+RUN cp -r $SRC_DIR/bin $APP_DIR/bin
+
+# 5. Make executables
+cd $APP_DIR
+sudo chmod +x $APP_DIR/run $APP_DIR/scripts/* $APP_DIR/bin/*
+
+# 4. Install Google Cloud Storage FUSE
+echo "Installing gcsfuse..."
+if [[ -x "$INSTALL_SCRIPT" ]]; then
+    "$INSTALL_SCRIPT"
+else
+    echo "Error: $INSTALL_SCRIPT is not executable or not found."
+    exit 1
+fi
+
+# 5. Mounting Bucket
+if [[ -x "$INIT_SCRIPT" ]]; then
+    "$INIT_SCRIPT"
+else
+    echo "Error: $INIT_SCRIPT is not executable or not found."
+    exit 1
+fi
+
+echo "Done!"
