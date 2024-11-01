@@ -15,6 +15,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+
 # Check for DOCKER_PASSWORD environment variable
 if [ -z "$DOCKER_PASSWORD" ]; then
     # Prompt for Docker Hub password

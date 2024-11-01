@@ -23,12 +23,6 @@ fi
 
 BUCKET_DIR='data'
 
-RCLONE_CONFIG_GCS_TYPE='gcs'
-RCLONE_GCS_SERVICE_ACCOUNT_FILE=${CREDENTIALS}
-RCLONE_GCS_OBJECT_ACL="private"
-RCLONE_GCS_BUCKET_ACL="private"
-RCLONE_GCS_LOCATION="europe-central2"
-RCLONE_GCS_NO_CHECK_BUCKET="true"
 
 echo "[$(date)]: Uploading Data.."
 

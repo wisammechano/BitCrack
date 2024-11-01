@@ -26,13 +26,23 @@ fi
 
 BUCKET_DIR='data'
 
-RCLONE_CONFIG_GCS_TYPE='gcs'
-RCLONE_GCS_SERVICE_ACCOUNT_FILE=${CREDENTIALS}
-RCLONE_GCS_OBJECT_ACL="private"
-RCLONE_GCS_BUCKET_ACL="private"
-RCLONE_GCS_LOCATION="europe-central2"
-RCLONE_GCS_NO_CHECK_BUCKET="true"
+CONFIG_FILE_PATH="/root/.config/rclone"
+mkdir -p "${CONFIG_FILE_PATH}"
 
+# Create config
+CONFIG_CONTENT=$(cat <<EOF
+[gcs]
+type = google cloud storage
+service_account_file = ${CREDENTIALS}
+object_acl = private
+bucket_acl = private
+location = europe-central2
+no_check_bucket = true
+EOF
+)
+
+# Write the content to the file
+echo "$CONFIG_CONTENT" > "$CONFIG_FILE_PATH"/rclone.conf
 
 # IF mount
 
