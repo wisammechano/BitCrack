@@ -1,7 +1,13 @@
 #!/bin/bash
 
-if [[ -z "${GOOGLE_BUCKET_NAME}" ]]; then
-  echo "ERROR: GOOGLE_BUCKET_NAME environment variable is not set."
+# G_SA_TOKEN: is the file download link token, acquire from firebase storage
+if [[ -z "${G_SA_TOKEN}" ]]; then
+  echo "ERROR: G_SA_TOKEN environment variable is not set."
+  exit 1
+fi
+
+if [[ -z "${G_BUCKET}" ]]; then
+  echo "ERROR: G_BUCKET environment variable is not set."
   exit 1
 fi
 
@@ -10,29 +16,25 @@ if [[ -z "${DATA_DIR}" ]]; then
   exit 1
 fi
 
-# Check if the required environment variables are set
-# Vast.ai only allows 256 characters in an environment variable
-# Service account credentials are split into 12 environment variables as base64 encoded strings
-for i in $(seq 1 12); do
-  eval varr=\$GOOGLE_SERVICE_ACCT_CREDENTIALS_$i
-  if [[ -z "$varr" ]]; then
-    echo "ERROR: GOOGLE_SERVICE_ACCT_CREDENTIALS_$i environment variable is not set."
-    exit 1
-  fi
-done
-
-# Assemble the base64 string of service account credentials
-GOOGLE_SERVICE_ACCT_CONTENTS=""
-for i in $(seq 1 12); do
-  eval varr=\$GOOGLE_SERVICE_ACCT_CREDENTIALS_$i
-  GOOGLE_SERVICE_ACCT_CONTENTS+="$varr"
-done
-
 # Servie account credentials path
 CREDENTIALS_PATH="/tmp/service_account.json"
 
-# Decode and save to a JSON file
-echo "$GOOGLE_SERVICE_ACCT_CONTENTS" | base64 -d > $CREDENTIALS_PATH
+# Check if service account file exists if it doesn't download it
+if [ ! -f $CREDENTIALS_PATH ]; then
+  echo "Service account file not found. Downloading..."
+  G_SA_PATH="secure/sa_user.json"
+  G_TOKEN_LINK="https://firebasestorage.googleapis.com/v0/b/${G_BUCKET}/o/${G_SA_PATH}?alt=media&token=${G_SA_TOKEN}"
+  curl -o $CREDENTIALS_PATH $G_TOKEN_LINK
+  if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to download service account file."
+    exit 1
+  else
+    echo "Service account file downloaded successfully."
+  fi
+else
+  echo "Using existing service account file."
+fi
+
 
 # Mount path
 MOUNT_PATH=$DATA_DIR
@@ -46,10 +48,7 @@ chmod g+w $MOUNT_PATH
 
 # Mount the bucket
 mkdir -p $MOUNT_PATH
-gcsfuse --key-file=$CREDENTIALS_PATH $GOOGLE_BUCKET_NAME $MOUNT_PATH
-
-# Clean up the credentials file
-rm $CREDENTIALS_PATH
+gcsfuse --key-file=$CREDENTIALS_PATH $G_BUCKET $MOUNT_PATH
 
 # Verify mounting
 if mount | grep "gcsfuse" > /dev/null; then
