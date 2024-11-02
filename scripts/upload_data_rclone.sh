@@ -11,15 +11,15 @@ if [[ ! -d "${DATA_DIR}" ]]; then
   exit 1
 fi
 
-CREDENTIALS=${1:-$CREDENTIALS_PATH}
+#CREDENTIALS=${1:-$CREDENTIALS_PATH}
 
 # Check if service account file exists; if not, exit
-if [[ ! -f "$CREDENTIALS" ]]; then
-  echo "Service account file not provided. Exiting..."
-  exit 1
-else
-  echo "Using service account file ${CREDENTIALS}"
-fi
+#if [[ ! -f "$CREDENTIALS" ]]; then
+#  echo "Service account file not provided. Exiting..."
+#  exit 1
+#else
+#  echo "Using service account file ${CREDENTIALS}"
+#fi
 
 BUCKET_DIR='data'
 
