@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # Variables
-IMAGE_NAME="wisso/bitcrack:improved"
-DOCKERFILE="Dockerfile.${1:-cuda}"
+TAG=${1:-improved}
+IMAGE_NAME="wisso/bitcrack:${TAG}"
+DOCKERFILE="Dockerfile.cuda"
 DOCKER_UNAME="wisso"
 
 # Build the Docker image
