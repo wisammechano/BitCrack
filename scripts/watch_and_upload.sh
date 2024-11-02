@@ -18,15 +18,16 @@ fi
 inotifywait -m -e modify,create "$WATCH_DIR" --format '%w%f' |
 while read FILE; do
     # Display which file was changed
-    echo "File changed: $FILE"
+    echo "[$(date)] | File changed: $FILE"
+    sleep 5
 
     # Upload the changed file to the remote destination
     # --update only uploads if source is newer than destination
     rclone copy "$FILE" "$REMOTE_PATH" --update
 
     if [ $? -eq 0 ]; then
-        echo "Successfully uploaded $FILE to $REMOTE_PATH"
+        echo "[$(date)] | Uploaded $FILE to $REMOTE_PATH"
     else
-        echo "Failed to upload $FILE"
+        echo "[$(date)] | Failed to upload $FILE"
     fi
 done

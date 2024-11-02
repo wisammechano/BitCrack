@@ -2,7 +2,7 @@
 
 # Installing Rclone
 
-sudo apt-get update && sudo apt-get install -y unzip
+sudo apt-get update && sudo apt-get install -y unzip inotify-tools
 
 echo "Installing Rclone..."
 sudo -v ; curl -sS https://rclone.org/install.sh | sudo bash
