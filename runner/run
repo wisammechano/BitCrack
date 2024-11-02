@@ -5,7 +5,7 @@ show_usage() {
     echo "Usage: $0 <number> [-s <value>] [-b <blocks>] [-p <points>] [-t <threads>] [additional options]"
     echo "Arguments:"
     echo "  <number>            Number of Bits to crack"
-    echo "  -s <value>          Optional share value (must be <= 10000)"
+    echo "  -s <value>          Optional share value (must be <= 10000). Example: 1/200 or <number> 1 => (1/10); 10 => (10/10); 010 => (010/100); etc.."
     echo "  -b <blocks>         Number of blocks (default: 512)"
     echo "  -p <points>         Number of points (default: 1024)"
     echo "  -t <threads>        Number of threads (default: 256)"
@@ -16,22 +16,31 @@ show_usage() {
 # Function to validate and set the share value
 set_share_value() {
     local share="$1"
-    if [[ "$share" =~ ^[0-9]+$ ]]; then
-        if [ "$share" -le 10 ]; then
-            SHARE_VALUE="${share}/10"
-        elif [ "$share" -le 100 ]; then
-            SHARE_VALUE="${share}/100"
-        elif [ "$share" -le 1000 ]; then
-            SHARE_VALUE="${share}/1000"
-        elif [ "$share" -le 10000 ]; then
-            SHARE_VALUE="${share}/10000"
-        else
-            echo "Error: Share value must be <= 10000."
-            exit 1
-        fi
+
+    # If the input contains '/', use it directly
+    if [[ "$share" =~ ^[0-9]+/[0-9]+$ ]]; then
+        SHARE_VALUE="$share"
     else
-        echo "Error: -s requires a numeric value."
-        exit 1
+        # handle edge cases like 010/100 or 0100/1000
+        case "${share}" in
+            "10") SHARE_VALUE="${share}/10" ;;
+            "010"|"100") SHARE_VALUE="${share}/100" ;;
+            "0010"|"0100"|"1000") SHARE_VALUE="${share}/1000" ;;
+            "00010"|"00100"|"01000"|"10000") SHARE_VALUE="${share}/10000" ;;
+            *)
+                # Use the length to determine the divisor
+                case "${#share}" in
+                    1) SHARE_VALUE="${share}/10" ;;
+                    2) SHARE_VALUE="${share}/100" ;;
+                    3) SHARE_VALUE="${share}/1000" ;;
+                    4) SHARE_VALUE="${share}/10000" ;;
+                    *) 
+                        echo "Error: Share value must be a number with up to 4 digits or a valid fraction."
+                        exit 1
+                        ;;
+                esac
+                ;;
+        esac
     fi
 }
 
@@ -110,7 +119,7 @@ extract_params() {
 
 # Function to initialize directories and paths
 initialize_paths() {
-    SHARE=$(echo "$SHARE_VALUE" | awk -F'/' '{print $1}')
+    SHARE=$(echo "$SHARE_VALUE" | sed 's|/|-|')
 
     if [[ -z "${DATA_DIR}" ]]; then
       echo "ERROR: DATA_DIR environment variable is not set."
