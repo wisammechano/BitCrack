@@ -1,6 +1,8 @@
 #!/bin/bash
 set -e  # Exit immediately if a command exits with a non-zero status
 
+env >> /etc/environment
+
 # Set  terminal to bash
 ln -sf /bin/bash /bin/sh
 export SHELL=/bin/bash
