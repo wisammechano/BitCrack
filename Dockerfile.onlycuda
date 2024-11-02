@@ -1,0 +1,46 @@
+# Step 1: Build the application
+FROM nvidia/cuda:11.4.3-devel-ubuntu20.04
+
+# Set bash default
+RUN ln -sf /bin/bash /bin/sh
+
+# Install necessary packages
+RUN apt-get update && apt-get install -y \
+  build-essential \
+  g++ \
+  make \
+  wget \
+  curl \
+  sudo \
+  vim \
+  cron \
+  nano \
+  bash-completion \
+  && rm -rf /var/lib/apt/lists/*
+
+# Set environment variables for paths
+ENV BUILD_DIR=/app_build \
+    APP_DIR=/app \
+    DATA_DIR=/app/data \
+    BIN_PATH=/app/bin/cuBitCrack \
+    SCRIPTS_DIR=/app/scripts
+
+# Set the working directory to BUILD_DIR and copy source code
+WORKDIR $BUILD_DIR
+COPY ./src .
+
+# Build the project with CUDA support
+RUN make BUILD_CUDA=1
+# Move to APP_DIR and set up application files and scripts
+WORKDIR $APP_DIR
+RUN cp -r ${BUILD_DIR}/bin ./bin
+
+# Install Rclone using the provided script
+COPY ./scripts/install_rclone ./scripts/install_rclone
+RUN ./scripts/install_rclone
+
+COPY ./runner .
+COPY ./scripts ./scripts
+
+# Make runner and scripts executable
+RUN chmod +x ./run ./scripts/* ./bin/*
