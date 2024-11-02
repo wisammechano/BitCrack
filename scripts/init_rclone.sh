@@ -38,6 +38,7 @@ object_acl = private
 bucket_acl = private
 location = europe-central2
 no_check_bucket = true
+bucket_policy_only = true
 EOF
 )
 
