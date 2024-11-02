@@ -45,15 +45,15 @@ RUN make BUILD_CUDA=1
 WORKDIR $APP_DIR
 RUN cp -r ${BUILD_DIR}/bin ./bin
 
+# Install Rclone using the provided script
+COPY ./scripts/install_rclone ./scripts/install_rclone
+RUN ./scripts/install_rclone
+
 COPY ./runner .
 COPY ./scripts ./scripts
 
-
 # Make runner and scripts executable
 RUN chmod +x ./run ./scripts/* ./bin/*
-
-# Install Rclone using the provided script
-RUN ./scripts/install_rclone
 
 # Expose port 8888 for JupyterLab
 EXPOSE 8888
