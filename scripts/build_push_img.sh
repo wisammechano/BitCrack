@@ -1,20 +1,32 @@
 #!/bin/bash
 
 # Variables
-IMAGE_NAME="wisso/bitcrack:improved"
-DOCKERFILE="Dockerfile.${1:-cuda}"
 DOCKER_UNAME="wisso"
+IMAGE_NAME=""
 
-# Build the Docker image
-echo "Building Docker image: $IMAGE_NAME..."
-docker build -t "$IMAGE_NAME" . -f "$DOCKERFILE"
-
-# Check if the build was successful
-if [ $? -ne 0 ]; then
-    echo "Docker build failed."
+# Function to display usage information
+show_usage() {
+    echo "Usage: $0 -t <tag> -d <dockerfile>"
+    echo "  -t <tag>          Image tag (required)"
+    echo "  -d <dockerfile>   Dockerfile to use (required)"
     exit 1
-fi
+}
 
+# Parse command-line arguments
+while getopts ":t:d:" opt; do
+    case $opt in
+        t) TAG="$OPTARG" ;;
+        d) DOCKERFILE="$OPTARG" ;;
+        \?) echo "Invalid option: -$OPTARG" >&2; show_usage ;;
+        :) echo "Option -$OPTARG requires an argument." >&2; show_usage ;;
+    esac
+done
+
+# Check if both TAG and DOCKERFILE are set
+if [ -z "$TAG" ] || [ -z "$DOCKERFILE" ]; then
+    echo "Error: Both -t <tag> and -d <dockerfile> are required."
+    show_usage
+fi
 
 # Check for DOCKER_PASSWORD environment variable
 if [ -z "$DOCKER_PASSWORD" ]; then
@@ -22,6 +34,19 @@ if [ -z "$DOCKER_PASSWORD" ]; then
     echo -n "Enter your Docker Hub password: "
     read -s DOCKER_PASSWORD
     echo
+fi
+
+# Set the image name using the tag
+IMAGE_NAME="${DOCKER_UNAME}/bitcrack:${TAG}"
+
+# Build the Docker image
+echo "Building Docker image: $IMAGE_NAME with Dockerfile: $DOCKERFILE..."
+docker build -t "$IMAGE_NAME" . -f "Dockerfile.$DOCKERFILE"
+
+# Check if the build was successful
+if [ $? -ne 0 ]; then
+    echo "Docker build failed."
+    exit 1
 fi
 
 # Log in to Docker
