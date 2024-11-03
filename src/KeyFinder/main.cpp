@@ -50,7 +50,7 @@ typedef struct {
 
     std::string resultsFile = "";
 
-    uint64_t totalkeys = 0;
+    uint64_t totalkeys = 0; // total processed keys (in no way we can process more than 2^64)
     unsigned int elapsed = 0;
     secp256k1::uint256 stride = 1;
 
@@ -116,12 +116,12 @@ void statusCallback(KeySearchStatus info)
         speedStr = util::format("%.2f", info.speed) + " MKey/s";
     }
 
-    uint64_t leftSize = (_config.endKey - _config.nextKey).toUint64();
+    secp256k1::uint256 leftSize = _config.endKey - _config.nextKey;
 
-    uint64_t leftKeys = (leftSize / _config.stride.toUint64() + leftSize % _config.stride.toUint64()) - info.total;
+    secp256k1::uint256 leftKeys = (leftSize / _config.stride) + (leftSize % _config.stride) - secp256k1::uint256(info.total);
 
-	std::string totalStr = "(" + util::formatThousands(_config.totalkeys + info.total) + " total)";
-    std::string remainStr = "(" + util::formatThousands(leftKeys) + " remaining)";
+	std::string totalStr = "(" + util::formatThousands(_config.totalkeys + info.total) + " total)"; // total processed keys
+    std::string remainStr = "(" + util::formatThousands(leftKeys) + " remaining)"; // remaining keys
 
     std::string timeStr = "[" + util::formatSeconds((unsigned int)((_config.elapsed + info.totalTime) / 1000)) + "]";
 
@@ -376,7 +376,7 @@ void readCheckpointFile()
         _config.stride = secp256k1::uint256(entries["stride"].value);
     }
 
-    _config.totalkeys = (_config.nextKey - _config.startKey).toUint64();
+    _config.totalkeys = (_config.nextKey - _config.startKey).toUint64(); // processed keys
 }
 
 int run()
@@ -386,14 +386,15 @@ int run()
         return 1;
     }
 
-    uint64_t spaceSize = (_config.endKey - _config.startKey).toUint64();
-    uint64_t leftSize = (_config.endKey - _config.nextKey).toUint64();
+    bool fromCheckPoint = _config.nextKey.cmp(_config.startKey) > 0;
 
-    uint64_t totalKeys = spaceSize / _config.stride.toUint64() + spaceSize % _config.stride.toUint64();
-    uint64_t leftKeys = leftSize / _config.stride.toUint64() + leftSize % _config.stride.toUint64();
+    secp256k1::uint256 spaceSize = _config.endKey - _config.startKey; // Total keyspace
+    secp256k1::uint256 totalKeys = (spaceSize / _config.stride) + (spaceSize % _config.stride);
 
     Logger::log(LogLevel::Info, "Compression: " + getCompressionString(_config.compression));
-    if (_config.nextKey.cmp(_config.startKey) > 0) {
+
+    if (fromCheckPoint) {
+        // Continuing from a checkpoint
         Logger::log(LogLevel::Info, "Started at:  " + _config.startKey.toString());
         Logger::log(LogLevel::Info, "Next at:     " + _config.nextKey.toString());
     }
@@ -403,7 +404,14 @@ int run()
     Logger::log(LogLevel::Info, "Ending at:   " + _config.endKey.toString());
     Logger::log(LogLevel::Info, "Counting by: " + _config.stride.toString());
     Logger::log(LogLevel::Info, "Total Keys:  " + util::formatThousands(totalKeys));
-    Logger::log(LogLevel::Info, "Left Keys:   " + util::formatThousands(leftKeys));
+    
+    if(fromCheckPoint) {
+        secp256k1::uint256 leftSize = _config.endKey - _config.nextKey; // Remaining keyspace
+        secp256k1::uint256 leftKeys = (leftSize / _config.stride) + (leftSize % _config.stride);
+
+        Logger::log(LogLevel::Info, "Processed:   " + util::formatThousands(_config.totalkeys));
+        Logger::log(LogLevel::Info, "Left Keys:   " + util::formatThousands(leftKeys));
+    }
 
     try {
 
