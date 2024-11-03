@@ -85,7 +85,7 @@ namespace util {
         return result;
     }
 
-    std::string formatThousands(const secp256k1::uint256 &x)
+    std::string formatThousands(secp256k1::uint256 &x)
     {
          // Convert uint256 to a decimal string
         std::string s = x.toString(10);
