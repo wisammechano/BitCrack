@@ -55,6 +55,7 @@ typedef struct {
     secp256k1::uint256 stride = 1;
 
     bool follow = false;
+    bool showRemaining = false;
 }RunConfig;
 
 static RunConfig _config;
@@ -141,12 +142,17 @@ void statusCallback(KeySearchStatus info)
     const char *formatStr = NULL;
 
     if(_config.follow) {
-        formatStr = "%s/%sMB | %s %s %s %s %s\n";
+        formatStr = "%s | %s/%sMB | %s %s %s %s %s\n";
     } else {
-        formatStr = "\r%s/%sMB | %s %s %s %s %s";
+        formatStr = "\r%s | %s/%sMB | %s %s %s %s %s";
     }
 
-	printf(formatStr, usedMemStr.c_str(), totalMemStr.c_str(), targetStr.c_str(), speedStr.c_str(), remainStr.c_str(), timeStr.c_str(), etaStr.c_str());
+    if(_config.showRemaining) {
+	    printf(formatStr, devName.c_str(), usedMemStr.c_str(), totalMemStr.c_str(), targetStr.c_str(), speedStr.c_str(), remainStr.c_str(), timeStr.c_str(), etaStr.c_str());
+    } else {
+	    printf(formatStr, devName.c_str(), usedMemStr.c_str(), totalMemStr.c_str(), targetStr.c_str(), speedStr.c_str(), totalStr.c_str(), timeStr.c_str(), etaStr.c_str());
+    }
+
 
     if(_config.checkpointFile.length() > 0) {
         uint64_t t = util::getSystemTime();
@@ -228,6 +234,7 @@ void usage()
     printf("--stride N              Increment by N keys at a time\n");
     printf("--share M/N             Divide the keyspace into N equal shares, process the Mth share\n");
     printf("--continue FILE         Save/load progress from FILE\n");
+    printf("--show-remaining        Show remaining count instead of processed count in status\n");
 }
 
 
@@ -547,6 +554,7 @@ int main(int argc, char **argv)
     parser.add("-i", "--in", true);
     parser.add("-o", "--out", true);
     parser.add("-f", "--follow", false);
+    parser.add("", "--show-remaining", false);
     parser.add("", "--list-devices", false);
     parser.add("", "--keyspace", true);
     parser.add("", "--continue", true);
@@ -637,6 +645,8 @@ int main(int argc, char **argv)
                 }
             } else if(optArg.equals("-f", "--follow")) {
                 _config.follow = true;
+            } else if(optArg.equals("", "--show-remaining")) {
+                _config.showRemaining = true;
             }
 
         } catch(std::string err) {
