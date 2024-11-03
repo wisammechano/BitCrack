@@ -57,20 +57,3 @@ if [[ $? -ne 0 ]]; then
   echo "ERROR: Failed to init rclone."
   exit 1
 fi
-
-# Setup a cron job that uploads data every 2 minutes
-# Create a cron job entry
-SCRIPT_DIR=${SCRIPTS_DIR:-"$(dirname "$(realpath "$0")")"}
-
-CRON_COMMAND="${SCRIPT_DIR}/upload_data_rclone.sh $CREDENTIALS >> ${DATA_DIR}/log.log 2>&1"
-
-CRON_JOB="*/1 * * * * $CRON_COMMAND"
-
-# Check if the cron job already exists
-if ! crontab -l | grep -Fxq "$CRON_JOB"; then
-    # Add the cron job
-    (crontab -l; echo "$CRON_JOB") | crontab -
-    echo "Cron job added: $CRON_JOB"
-else
-    echo "Cron job already exists: $CRON_JOB"
-fi

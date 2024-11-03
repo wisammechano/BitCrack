@@ -4,6 +4,9 @@ FROM nvidia/cuda:11.4.3-devel-ubuntu20.04
 # Set bash default
 RUN ln -sf /bin/bash /bin/sh
 
+ENV TZ="Asia/Baghdad" \
+    DEBIAN_FRONTEND=noninteractive
+
 # Install necessary packages
 RUN apt-get update && apt-get install -y \
   build-essential \
@@ -13,13 +16,19 @@ RUN apt-get update && apt-get install -y \
   curl \
   sudo \
   vim \
-  cron \
   nano \
   bash-completion \
   python3 \
   python3-pip \
   python3-venv \
+  openssh-server \
   && rm -rf /var/lib/apt/lists/*
+
+# Setup ssh
+RUN echo "PermitRootLogin yes" >> /etc/ssh/sshd_config && \
+    echo "PasswordAuthentication no" >> /etc/ssh/sshd_config && \
+    echo "PubkeyAuthentication yes" >> /etc/ssh/sshd_config && \
+    mkdir /var/run/sshd
 
 # Set up a virtual environment for Python packages
 RUN python3 -m venv /opt/venv
@@ -55,7 +64,7 @@ COPY ./scripts ./scripts
 # Make runner and scripts executable
 RUN chmod +x ./run ./scripts/* ./bin/*
 
-# Expose port 8888 for JupyterLab
-EXPOSE 8888
+# Expose port 8080 for JupyterLab and 22 for sshd
+EXPOSE 8080 22
 
 ENTRYPOINT [ "./scripts/entrypoint.sh" ]
