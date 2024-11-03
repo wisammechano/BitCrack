@@ -15,14 +15,18 @@ if ! command -v inotifywait &> /dev/null; then
 fi
 
 # Run a loop that listens for changes
-inotifywait -m -e close_write "$WATCH_DIR" --format '%w%f' |
+inotifywait -m -r -e close_write "$WATCH_DIR" --format '%w%f' |
 while read FILE; do
     # Display which file was changed
-    echo -n "[$(date)] | File changed: $FILE .. Uploading .. "
+
+    # Extract the filename and path relative to $WATCH_DIR
+    RELATIVE_PATH=$(dirname "$FILE" | sed "s|^$WATCH_DIR/||")
+    BASE_NAME=$(basename "$FILE")
+    echo -n "[$(date)] | File changed: $RELATIVE_PATH/$BASE_NAME .. Uploading .. "
 
     # Upload the changed file to the remote destination
     # --update only uploads if source is newer than destination
-    rclone copy "$FILE" "$REMOTE_PATH" --update
+    rclone copy "$FILE" "${REMOTE_PATH}/${RELATIVE_PATH}" --update
 
     if [ $? -eq 0 ]; then
         echo "Success."

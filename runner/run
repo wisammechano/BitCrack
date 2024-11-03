@@ -119,7 +119,7 @@ extract_params() {
 
 # Function to initialize directories and paths
 initialize_paths() {
-    SHARE=$(echo "$SHARE_VALUE" | sed 's|/|-|')
+    SHARE=$(echo "$SHARE_VALUE" | awk -F'/' '{print $2 "-" $1}') # change / to - and flip the numbers to n-m
 
     if [[ -z "${DATA_DIR}" ]]; then
       echo "ERROR: DATA_DIR environment variable is not set."
@@ -133,8 +133,11 @@ initialize_paths() {
 
     echo "Using data directory: ${DATA_DIR}"
 
-    OUT_FILE="${DATA_DIR}/out${BITS}.txt"
-    CP_FILE="${DATA_DIR}/cp-${BITS}-${SHARE}.txt"
+    BITS_DIR="${DATA_DIR}/${BITS}"
+    mkdir -p "${BITS_DIR}"
+
+    OUT_FILE="${BITS_DIR}/pkey-${BITS}.txt"
+    CP_FILE="${BITS_DIR}/${BITS}-${SHARE}.txt"
     PARAMS_FILE="${DATA_DIR}/params.txt"
 }
 
