@@ -295,3 +295,6 @@ TestData/
 # Runner data
 runner/data/
 data/
+
+src/.cache
+.vscode
