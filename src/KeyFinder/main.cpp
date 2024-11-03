@@ -131,7 +131,7 @@ void statusCallback(KeySearchStatus info)
 
     std::string targetStr = util::format(info.targets) + " target" + (info.targets > 1 ? "s" : "");
 
-    std::string etaStr = "[ETA " + util::formatEta(leftKeys / (info.speed * 1000000)) + "]";
+    std::string etaStr = "[ETA " + util::formatEta(leftKeys.toUint64() / (info.speed * 1000000)) + "]";
 
 
 	// Fit device name in 16 characters, pad with spaces if less

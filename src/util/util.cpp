@@ -181,6 +181,10 @@ namespace util {
     }
 
 	std::string formatEta(uint64_t n) {
+        // n could be overflowing uint64_t for having too many keys left
+        if(n < 0) {
+            return "100+ years";
+        }
 		const unsigned int secondsInMinute = 60;
 		const unsigned int secondsInHour = 60 * secondsInMinute;
 		const unsigned int secondsInDay = 24 * secondsInHour;
