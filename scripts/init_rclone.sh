@@ -26,7 +26,7 @@ fi
 
 BUCKET_DIR='data'
 
-CONFIG_FILE_PATH="/root/.config/rclone"
+CONFIG_FILE_PATH="${HOME}/.config/rclone"
 mkdir -p "${CONFIG_FILE_PATH}"
 
 # Create config
