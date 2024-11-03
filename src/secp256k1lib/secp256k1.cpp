@@ -133,6 +133,20 @@ static uint256 rightShift(const uint256 &x, int count)
 	return r;
 }
 
+static uint256 leftShift(const uint256 &x, int count)
+{
+	uint256 r;
+
+	count &= 0x1f; // Limit count to the range [0, 31]
+
+	for (int i = 7; i > 0; i--) {
+			r.v[i] = (x.v[i] << count) | (x.v[i - 1] >> (32 - count));
+	}
+	r.v[0] = x.v[0] << count;
+
+	return r;
+}
+
 uint256 uint256::mul(const uint256 &x) const
 {
 	unsigned int product[16] = { 0 };
@@ -208,6 +222,46 @@ uint256 uint256::div(uint32_t val) const
 	return quotient;
 }
 
+uint256 uint256::div(const uint256 &val) const
+{
+	uint256 t = *this;
+	uint256 k = val;
+	uint256 quotient;
+
+	// Edge case: If divisor is 0, handle error (div-by-zero)
+	if (k.isZero()) {
+		throw std::overflow_error("Division by zero");
+	}
+
+	// Edge case: If divisor is greater than dividend, quotient is zero
+	if (t.cmp(k) < 0) {
+		return uint256(0);
+	}
+
+	// Align the divisor k to the most significant bit of t
+	int shiftCount = 0;
+	while (k.cmp(t) < 0) {
+		k = leftShift(k, 1);
+		shiftCount++;
+	}
+
+	// Perform the division algorithm
+	while (shiftCount >= 0) {
+		// Ensure we only subtract if t >= k
+		if (t.cmp(k) >= 0) {
+			t = t.sub(k);
+			quotient = quotient.add(uint256(2).pow(shiftCount));
+		}
+
+		// Right-shift k to try next lower power of 2
+		k = rightShift(k, 1);
+		shiftCount--;
+	}
+
+	return quotient;
+}
+
+
 
 uint256 uint256::mod(uint32_t val) const
 {
@@ -221,6 +275,28 @@ uint256 uint256::mod(uint32_t val) const
 
 	return result;
 }
+
+uint256 uint256::mod(const uint256 &val) const
+{
+	// Edge case: Modulus by zero is undefined
+	if (val.isZero()) {
+		throw std::overflow_error("Modulo by zero");
+	}
+
+	// Compute quotient
+	uint256 quotient = this->div(val);
+
+	// Compute product of quotient and divisor
+	uint256 product = quotient.mul(val);
+
+	// Compute remainder
+	uint256 result;
+
+	::sub(this->v, product.v, result.v, 8);
+
+	return result;
+}
+
 
 uint256 uint256::add(int val) const
 {
@@ -615,16 +691,30 @@ uint256 secp256k1::multiplyModN(const uint256 &a, const uint256 &b)
 
 std::string secp256k1::uint256::toString(int base)
 {
-	std::string s = "";
+	if (base == 16) {
+		std::string s = "";
 
-	for(int i = 7; i >= 0; i--) {
-		char hex[9] = { 0 };
+		for(int i = 7; i >= 0; i--) {
+				char hex[9] = { 0 };
 
-		sprintf(hex, "%.8X", this->v[i]);
-		s += std::string(hex);
+				sprintf(hex, "%.8X", this->v[i]);
+				s += std::string(hex);
+		}
+
+		return s;
+	} else if (base == 10) {
+		// Convert to decimal
+		uint256 temp = *this;
+		std::string s = "";
+		while (!temp.isZero()) {
+				uint32_t remainder = (temp % 10).toInt32();
+				s = std::to_string(remainder) + s;
+				temp = temp / 10;
+		}
+		return s.empty() ? "0" : s;
+	} else {
+		throw std::invalid_argument("Unsupported base");
 	}
-
-	return s;
 }
 
 

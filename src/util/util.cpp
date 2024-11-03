@@ -85,6 +85,34 @@ namespace util {
         return result;
     }
 
+    std::string formatThousands(const secp256k1::uint256 &x)
+    {
+         // Convert uint256 to a decimal string
+        std::string s = x.toString(10);
+
+        int len = static_cast<int>(s.length());
+        int numCommas = (len - 1) / 3;
+
+        if (numCommas == 0) {
+            return s;  // No formatting needed if number has fewer than 4 digits
+        }
+
+        std::string result = "";
+        int count = ((len % 3) == 0) ? 0 : (3 - (len % 3));
+
+        // Insert commas every three digits from the right
+        for (int i = 0; i < len; i++) {
+            result += s[i];
+
+            if (count++ == 2 && i < len - 1) {
+                result += ",";
+                count = 0;
+            }
+        }
+
+        return result;
+    }
+
     uint32_t parseUInt32(std::string s)
     {
         return (uint32_t)parseUInt64(s);

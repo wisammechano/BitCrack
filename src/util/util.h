@@ -5,6 +5,8 @@
 #include <vector>
 #include <stdint.h>
 
+#include "secp256k1.h"
+
 namespace util {
 
 class Timer {
@@ -22,6 +24,8 @@ uint64_t getSystemTime();
 void sleep(int seconds);
 
 std::string formatThousands(uint64_t x);
+std::string formatThousands(const secp256k1::uint256 &x);
+
 std::string formatSeconds(unsigned int seconds);
 std::string formatEta(uint64_t n);
 

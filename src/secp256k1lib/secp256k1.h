@@ -2,6 +2,7 @@
 #define _HOST_SECP256K1_H
 
 #include<stdio.h>
+#include<stdexcept>
 #include<stdint.h>
 #include<string.h>
 #include<string>
@@ -139,6 +140,16 @@ namespace secp256k1 {
             return mul(x);
         }
 
+				uint256 operator/(const uint256 &x) const
+				{
+					return div(x);
+				}
+
+				uint256 operator%(const uint256 &x) const
+				{
+					return mod(x);
+				}
+
         uint256 operator-(const uint256 &x) const
         {
             return sub(x);
@@ -179,7 +190,12 @@ namespace secp256k1 {
 
 		uint256 div(uint32_t val) const;
 
+		uint256 div(const uint256 &val) const;
+
 		uint256 mod(uint32_t val) const;
+
+		uint256 mod(const uint256 &val) const;
+
 
 		unsigned int toInt32() const
 		{
