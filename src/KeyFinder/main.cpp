@@ -121,7 +121,7 @@ void statusCallback(KeySearchStatus info)
 
     secp256k1::uint256 leftKeys = (leftSize / _config.stride) + (leftSize % _config.stride) - secp256k1::uint256(info.total);
 
-	std::string totalStr = "(" + util::formatThousands(_config.totalkeys + info.total) + " total)"; // total processed keys
+	std::string totalStr = "(" + util::formatThousands(_config.totalkeys + info.total) + " processed)"; // total processed keys
     std::string remainStr = "(" + util::formatThousands(leftKeys) + " remaining)"; // remaining keys
 
     std::string timeStr = "[" + util::formatSeconds((unsigned int)((_config.elapsed + info.totalTime) / 1000)) + "]";
@@ -136,7 +136,7 @@ void statusCallback(KeySearchStatus info)
 
 
 	// Fit device name in 16 characters, pad with spaces if less
-	std::string devName = info.deviceName.substr(0, 16);
+	std::string devName = info.deviceName.substr(7, 7+16);
 	devName += std::string(16 - devName.length(), ' ');
 
     const char *formatStr = NULL;
