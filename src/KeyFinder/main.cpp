@@ -14,6 +14,7 @@
 
 #ifdef BUILD_CUDA
 #include "CudaKeySearchDevice.h"
+#include "CudaRandKeySearchDevice.h"
 #endif
 
 #ifdef BUILD_OPENCL
@@ -55,6 +56,7 @@ typedef struct {
     secp256k1::uint256 stride = 1;
 
     bool follow = false;
+    bool random = false;
     bool showRemaining = false;
 }RunConfig;
 
@@ -223,6 +225,7 @@ void usage()
     printf("-i, --in FILE           Read addresses from FILE, one per line\n");
     printf("-o, --out FILE          Write keys to FILE\n");
     printf("-f, --follow            Follow text output\n");
+    printf("-r, --random            Search the keyspace randomly. Can't be used with --continue\n");
     printf("--list-devices          List available devices\n");
     printf("--keyspace KEYSPACE     Specify the keyspace:\n");
     printf("                          START:END\n");
@@ -233,7 +236,7 @@ void usage()
     printf("                        Where START, END, COUNT are in hex format\n");
     printf("--stride N              Increment by N keys at a time\n");
     printf("--share M/N             Divide the keyspace into N equal shares, process the Mth share\n");
-    printf("--continue FILE         Save/load progress from FILE\n");
+    printf("--continue FILE         Save/load progress from FILE. Can't be used with --random\n");
     printf("--show-remaining        Show remaining count instead of processed count in status\n");
 }
 
@@ -261,6 +264,9 @@ static KeySearchDevice *getDeviceContext(DeviceManager::DeviceInfo &device, int 
 {
 #ifdef BUILD_CUDA
     if(device.type == DeviceManager::DeviceType::CUDA) {
+        if(_config.random) {
+            return new CudaRandKeySearchDevice((int)device.physicalId, threads, pointsPerThread, blocks);
+        }
         return new CudaKeySearchDevice((int)device.physicalId, threads, pointsPerThread, blocks);
     }
 #endif
@@ -554,6 +560,7 @@ int main(int argc, char **argv)
     parser.add("-i", "--in", true);
     parser.add("-o", "--out", true);
     parser.add("-f", "--follow", false);
+    parser.add("-r", "--random", false);
     parser.add("", "--show-remaining", false);
     parser.add("", "--list-devices", false);
     parser.add("", "--keyspace", true);
@@ -647,6 +654,11 @@ int main(int argc, char **argv)
                 _config.follow = true;
             } else if(optArg.equals("", "--show-remaining")) {
                 _config.showRemaining = true;
+            } else if(optArg.equals("-r", "--random")) {
+                _config.random = true;
+                if(_config.checkpointFile.length() > 0) {
+                    throw std::string("Can't use --random with --continue");
+                }
             }
 
         } catch(std::string err) {

@@ -1,5 +1,5 @@
-#ifndef _CUDA_KEY_SEARCH_DEVICE
-#define _CUDA_KEY_SEARCH_DEVICE
+#ifndef _CUDA_RAND_KEY_SEARCH_DEVICE
+#define _CUDA_RAND_KEY_SEARCH_DEVICE
 
 #include "KeySearchDevice.h"
 #include <vector>
@@ -13,7 +13,7 @@
 
 
 
-class CudaKeySearchDevice : public KeySearchDevice {
+class CudaRandKeySearchDevice : public KeySearchDevice {
 
 private:
 
@@ -61,7 +61,7 @@ private:
 
 public:
 
-    CudaKeySearchDevice(int device, int threads, int pointsPerThread, int blocks = 0);
+    CudaRandKeySearchDevice(int device, int threads, int pointsPerThread, int blocks = 0);
 
     virtual void init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride);
 
