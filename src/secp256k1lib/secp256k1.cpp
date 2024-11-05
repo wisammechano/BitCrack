@@ -728,12 +728,15 @@ std::string secp256k1::uint256::toString(int base) const
 }
 
 
-uint256 secp256k1::generatePrivateKey()
+uint256 secp256k1::generatePrivateKey(uint256 min, uint256 max)
 {
 	uint256 k;
 
 	_rng.get((unsigned char *)k.v, 32);
-
+	if((min.cmp(_ONE) != 0 || max.cmp(N) != 0) && min.cmp(max) < 0) {
+		uint256 mod = k.mod(max.sub(min));
+		return min.add(mod);
+	}
 	return k;
 }
 
@@ -831,16 +834,17 @@ ecpoint secp256k1::multiplyPoint(const uint256 &k, const ecpoint &p)
 	return sum;
 }
 
-uint256 generatePrivateKey()
-{
-	uint256 k;
+// not used
+// uint256 generatePrivateKey()
+// {
+// 	uint256 k;
 
-	for(int i = 0; i < 8; i++) {
-		k.v[i] = ((unsigned int)rand() | ((unsigned int)rand()) << 17);
-	}
+// 	for(int i = 0; i < 8; i++) {
+// 		k.v[i] = ((unsigned int)rand() | ((unsigned int)rand()) << 17);
+// 	}
 
-	return k;
-}
+// 	return k;
+// }
 
 bool secp256k1::pointExists(const ecpoint &p)
 {
