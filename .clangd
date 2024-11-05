@@ -1,2 +1,16 @@
 CompileFlags:
   CompilationDatabase: src/       # Search src/ directory for compile_commands.json
+  Remove: 
+    - -fno-ipa-sra, -fno-ipa-sra
+    - -gencode*
+    - -rdc=true
+    - -Xptxas=-v
+    - -forward-unknown-to-host-compiler
+    - --generate-code*
+    - -O2 -std=c++11
+    - -O2
+    - -std=c++11
+  Add:
+    - --no-cuda-version-check
+    - -O2
+    - -std=c++11
