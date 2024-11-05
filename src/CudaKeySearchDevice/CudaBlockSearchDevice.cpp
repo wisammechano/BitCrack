@@ -1,4 +1,4 @@
-#include "CudaRandKeySearchDevice.h"
+#include "CudaBlockSearchDevice.h"
 #include "Logger.h"
 #include "secp256k1.h"
 #include "util.h"
@@ -7,7 +7,7 @@
 
 static secp256k1::uint256 _ONE(1);
 
-void CudaRandKeySearchDevice::init(const secp256k1::uint256 &start, const secp256k1::uint256 &end, int compression, const secp256k1::uint256 &stride)
+void CudaBlockSearchDevice::init(const secp256k1::uint256 &start, const secp256k1::uint256 &end, int compression, const secp256k1::uint256 &stride)
 {
     if(start.cmp(secp256k1::N) >= 0) {
         throw KeySearchException("Starting key is out of range");
@@ -61,7 +61,7 @@ void CudaRandKeySearchDevice::init(const secp256k1::uint256 &start, const secp25
 }
 
 
-void CudaRandKeySearchDevice::generateStartingPoints()
+void CudaBlockSearchDevice::generateStartingPoints()
 {
     uint64_t totalPoints = (uint64_t)_pointsPerThread * _threads * _blocks;
     uint64_t totalMemory = totalPoints * 40;
@@ -98,7 +98,7 @@ void CudaRandKeySearchDevice::generateStartingPoints()
     _deviceKeys.clearPrivateKeys();
 }
 
-void CudaRandKeySearchDevice::doStep()
+void CudaBlockSearchDevice::doStep()
 {
     uint64_t numKeys = (uint64_t)_blocks * _threads * _pointsPerThread;
 
@@ -117,20 +117,7 @@ void CudaRandKeySearchDevice::doStep()
     _iterations++;
 }
 
-uint32_t CudaRandKeySearchDevice::getPrivateKeyOffset(int thread, int block, int idx)
-{
-    // Total number of threads
-    int totalThreads = _blocks * _threads;
-
-    int base = idx * totalThreads;
-
-    // Global ID of the current thread
-    int threadId = block * _threads + thread;
-
-    return base + threadId;
-}
-
-void CudaRandKeySearchDevice::getResultsInternal()
+void CudaBlockSearchDevice::getResultsInternal()
 {
     int count = _resultList.size();
     int actualCount = 0;
@@ -185,7 +172,7 @@ void CudaRandKeySearchDevice::getResultsInternal()
 }
 
 
-secp256k1::uint256 CudaRandKeySearchDevice::getNextKey()
+secp256k1::uint256 CudaBlockSearchDevice::getNextKey()
 {
 
     // next iteration has largest key at last n

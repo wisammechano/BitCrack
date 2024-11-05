@@ -35,6 +35,8 @@ protected:
 
     virtual void generateStartingPoints() = 0;
 
+    virtual uint32_t getPrivateKeyOffset(int thread, int block, int idx);
+
     CudaDeviceKeys _deviceKeys;
 
     CudaAtomicList _resultList;
@@ -48,8 +50,6 @@ protected:
     bool isTargetInList(const unsigned int hash[5]);
     
     void removeTargetFromList(const unsigned int hash[5]);
-
-    virtual uint32_t getPrivateKeyOffset(int thread, int block, int point) = 0;
 
     secp256k1::uint256 _stride;
 

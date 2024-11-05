@@ -15,7 +15,9 @@
 
 #ifdef BUILD_CUDA
 #include "CudaKeySearchDevice.h"
-#include "CudaRandKeySearchDevice.h"
+#include "CudaBlockSearchDevice.h"
+#include "CudaRandSearchDevice.h"
+
 #endif
 
 #ifdef BUILD_OPENCL
@@ -58,6 +60,7 @@ typedef struct {
 
     bool follow = false;
     bool random = false;
+    bool blockSearch = false;
     bool showRemaining = false;
 }RunConfig;
 
@@ -226,6 +229,7 @@ void usage()
     printf("-i, --in FILE           Read addresses from FILE, one per line\n");
     printf("-o, --out FILE          Write keys to FILE\n");
     printf("-f, --follow            Follow text output\n");
+    printf("--block-search          Search the keyspace in equal sized blocks. Can't be used with --continue\n");
     printf("-r, --random            Search the keyspace randomly. Can't be used with --continue\n");
     printf("--list-devices          List available devices\n");
     printf("--keyspace KEYSPACE     Specify the keyspace:\n");
@@ -265,8 +269,10 @@ static KeySearchDevice *getDeviceContext(DeviceManager::DeviceInfo &device, int 
 {
 #ifdef BUILD_CUDA
     if(device.type == DeviceManager::DeviceType::CUDA) {
-        if(_config.random) {
-            return new CudaRandKeySearchDevice((int)device.physicalId, threads, pointsPerThread, blocks);
+        if(_config.blockSearch) {
+            return new CudaBlockSearchDevice((int)device.physicalId, threads, pointsPerThread, blocks);
+        } else if (_config.random) {
+            return new CudaRandSearchDevice((int)device.physicalId, threads, pointsPerThread, blocks);
         }
         return new CudaKeySearchDevice((int)device.physicalId, threads, pointsPerThread, blocks);
     }
@@ -407,7 +413,7 @@ int run()
 
     Logger::log(LogLevel::Info, "Compression: " + getCompressionString(_config.compression));
 
-    std::string searchMethod = _config.random? "Random":"Sequential";
+    std::string searchMethod = _config.blockSearch? "Block Search": _config.random? "Random Search":"Sequential Search";
 
     if (fromCheckPoint) {
         // Continuing from a checkpoint
@@ -565,6 +571,7 @@ int main(int argc, char **argv)
     parser.add("-i", "--in", true);
     parser.add("-o", "--out", true);
     parser.add("-f", "--follow", false);
+    parser.add("", "--block-search", false);
     parser.add("-r", "--random", false);
     parser.add("", "--show-remaining", false);
     parser.add("", "--list-devices", false);
@@ -612,8 +619,8 @@ int main(int argc, char **argv)
                 listDevices = true;
             } else if(optArg.equals("", "--continue")) {
                 _config.checkpointFile = optArg.arg;
-                if(_config.random) {
-                    throw std::string("Can't use --continue with --random");
+                if(_config.random || _config.blockSearch) {
+                    throw std::string("Can't use with --random or --block-search");
                 }
             } else if(optArg.equals("", "--keyspace")) {
                 secp256k1::uint256 start;
@@ -664,8 +671,13 @@ int main(int argc, char **argv)
                 _config.showRemaining = true;
             } else if(optArg.equals("-r", "--random")) {
                 _config.random = true;
-                if(_config.checkpointFile.length() > 0) {
-                    throw std::string("Can't use --random with --continue");
+                if(_config.checkpointFile.length() > 0 || _config.blockSearch) {
+                    throw std::string("Can't use with --continue or --block-search");
+                }
+            } else if(optArg.equals("", "--block-search")) {
+                _config.blockSearch = true;
+                if(_config.checkpointFile.length() > 0 || _config.random) {
+                    throw std::string("Can't use with --continue or --random");
                 }
             }
 

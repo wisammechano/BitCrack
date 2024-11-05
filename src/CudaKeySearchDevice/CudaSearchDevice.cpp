@@ -146,6 +146,19 @@ bool CudaSearchDevice::verifyKey(const secp256k1::uint256 &privateKey, const sec
     return true;
 }
 
+uint32_t CudaSearchDevice::getPrivateKeyOffset(int thread, int block, int idx)
+{
+    // Total number of threads
+    int totalThreads = _blocks * _threads;
+
+    int base = idx * totalThreads;
+
+    // Global ID of the current thread
+    int threadId = block * _threads + thread;
+
+    return base + threadId;
+}
+
 size_t CudaSearchDevice::getResults(std::vector<KeySearchResult> &resultsOut)
 {
     for(int i = 0; i < _results.size(); i++) {
