@@ -375,6 +375,7 @@ namespace secp256k1 {
 	uint256 subModN(const uint256 &a, const uint256 &b);
 
 	uint256 generatePrivateKey(uint256 min = 1, uint256 max = N);
+	uint256 randomize(uint256& v);
 
 	bool pointExists(const ecpoint &p);
 

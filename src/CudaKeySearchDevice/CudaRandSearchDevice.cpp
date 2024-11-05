@@ -51,9 +51,13 @@ void CudaRandSearchDevice::generateStartingPoints()
 
     Logger::log(LogLevel::Info, "Generating " + util::formatThousands(totalPoints) + " starting points (" + util::format("%.1f", (double)totalMemory / (double)(1024 * 1024)) + "MB)");
 
-    // Generate key pairs randomly for <total points in parallel>
+    secp256k1::uint256 privateKey = secp256k1::generatePrivateKey(_startExponent, _endExponent.add(1));
+    _seedExponents.push_back(privateKey);
+
+    // Generate key pairs randomly for <total points in parallel -1>
     for(uint64_t i = 1; i < totalPoints; i++) {
-        _seedExponents.push_back(secp256k1::generatePrivateKey(_startExponent, _endExponent.add(1)));
+        privateKey = secp256k1::randomize(privateKey);
+        _seedExponents.push_back(privateKey);
     }
 
     cudaCall(_deviceKeys.init(_blocks, _threads, _pointsPerThread, _seedExponents));

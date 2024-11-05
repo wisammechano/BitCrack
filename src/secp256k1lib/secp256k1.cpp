@@ -727,6 +727,19 @@ std::string secp256k1::uint256::toString(int base) const
 	}
 }
 
+uint256 secp256k1::randomize(uint256 &v) {
+	unsigned char bytes[32];
+	_rng.get(bytes, 32);
+	for (int i=0; i<8; i++) {
+		if(v.v[i] > 0) {
+			// Take 4 bytes at a time and reinterpret them as an unsigned int
+        	v.v[i] = *reinterpret_cast<unsigned int*>(&bytes[i * 4]);
+		}
+	}
+
+	return v;
+}
+
 
 uint256 secp256k1::generatePrivateKey(uint256 min, uint256 max)
 {
