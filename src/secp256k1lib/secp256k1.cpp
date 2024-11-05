@@ -240,7 +240,7 @@ uint256 uint256::div(const uint256 &val) const
 
 	// Align the divisor k to the most significant bit of t
 	int shiftCount = 0;
-	while (k.cmp(t) < 0) {
+	while (k.cmp(t) < 0 && !leftShift(k, 1).isZero()) {
 		k = leftShift(k, 1);
 		shiftCount++;
 	}
@@ -281,6 +281,16 @@ uint256 uint256::mod(const uint256 &val) const
 	// Edge case: Modulus by zero is undefined
 	if (val.isZero()) {
 		throw std::overflow_error("Modulo by zero");
+	}
+
+	// If dividend < divisor, return dividend as the remainder
+    if (this->cmp(val) < 0) {
+        return *this;
+    }
+
+	// If dividend == divisor, return 0 as the remainder
+	if(this->cmp(val) == 0) {
+		return uint256(0);
 	}
 
 	// Compute quotient
