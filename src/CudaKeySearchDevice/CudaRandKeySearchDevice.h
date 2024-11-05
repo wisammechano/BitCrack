@@ -15,6 +15,9 @@ private:
 
     secp256k1::uint256 _startExponent;
     secp256k1::uint256 _endExponent;
+    secp256k1::uint256 _perIter;
+    secp256k1::uint256 _gridStride;
+
 
 
 public:
