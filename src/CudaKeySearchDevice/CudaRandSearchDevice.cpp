@@ -150,5 +150,6 @@ void CudaRandSearchDevice::getResultsInternal()
 
 secp256k1::uint256 CudaRandSearchDevice::getNextKey()
 {
-  return _ONE;
+    // we don't need to stop until ctrl-c or finding key
+  return _startExponent;
 }
