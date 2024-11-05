@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <fstream>
 #include <iostream>
+#include <string>
 
 #include "KeyFinder.h"
 #include "AddressUtil.h"
@@ -406,6 +407,8 @@ int run()
 
     Logger::log(LogLevel::Info, "Compression: " + getCompressionString(_config.compression));
 
+    std::string searchMethod = _config.random? "Random":"Sequential";
+
     if (fromCheckPoint) {
         // Continuing from a checkpoint
         Logger::log(LogLevel::Info, "Started at:  " + _config.startKey.toString());
@@ -416,7 +419,9 @@ int run()
     }
     Logger::log(LogLevel::Info, "Ending at:   " + _config.endKey.toString());
     Logger::log(LogLevel::Info, "Counting by: " + _config.stride.toString());
+    
     Logger::log(LogLevel::Info, "Total Keys:  " + util::formatThousands(totalKeys));
+    Logger::log(LogLevel::Info, "Search Method: " + searchMethod);
     
     if(fromCheckPoint) {
         secp256k1::uint256 leftSize = _config.endKey - _config.nextKey; // Remaining keyspace

@@ -1,83 +1,29 @@
 #ifndef _CUDA_RAND_KEY_SEARCH_DEVICE
 #define _CUDA_RAND_KEY_SEARCH_DEVICE
 
-#include "KeySearchDevice.h"
-#include <vector>
-#include <cuda_runtime.h>
-#include "secp256k1.h"
-#include "CudaDeviceKeys.h"
-#include "CudaHashLookup.h"
-#include "CudaAtomicList.h"
-#include "cudaUtil.h"
-#include "CudaDeviceResult.h"
+#include "CudaSearchDevice.h"
 
 
-
-class CudaRandKeySearchDevice : public KeySearchDevice {
+class CudaRandKeySearchDevice : public CudaSearchDevice {
 
 private:
+    void generateStartingPoints() final;
 
-    int _device;
+    void getResultsInternal() final;
 
-    int _blocks;
-
-    int _threads;
-
-    int _pointsPerThread;
-
-    int _compression;
-
-    std::vector<KeySearchResult> _results;
-
-    std::string _deviceName;
+    uint32_t getPrivateKeyOffset(int thread, int block, int point) final;
 
     secp256k1::uint256 _startExponent;
 
-    uint64_t _iterations;
-
-    void cudaCall(cudaError_t err);
-
-    void generateStartingPoints();
-
-    CudaDeviceKeys _deviceKeys;
-
-    CudaAtomicList _resultList;
-
-    CudaHashLookup _targetLookup;
-
-    void getResultsInternal();
-
-    std::vector<hash160> _targets;
-
-    bool isTargetInList(const unsigned int hash[5]);
-    
-    void removeTargetFromList(const unsigned int hash[5]);
-
-    uint32_t getPrivateKeyOffset(int thread, int block, int point);
-
-    secp256k1::uint256 _stride;
-
-    bool verifyKey(const secp256k1::uint256 &privateKey, const secp256k1::ecpoint &publicKey, const unsigned int hash[5], bool compressed);
 
 public:
+    using CudaSearchDevice::CudaSearchDevice;
 
-    CudaRandKeySearchDevice(int device, int threads, int pointsPerThread, int blocks = 0);
+    void init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride) final;
 
-    virtual void init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride);
+    void doStep() final;
 
-    virtual void doStep();
-
-    virtual void setTargets(const std::set<KeySearchTarget> &targets);
-
-    virtual size_t getResults(std::vector<KeySearchResult> &results);
-
-    virtual uint64_t keysPerStep();
-
-    virtual std::string getDeviceName();
-
-    virtual void getMemoryInfo(uint64_t &freeMem, uint64_t &totalMem);
-
-    virtual secp256k1::uint256 getNextKey();
+    secp256k1::uint256 getNextKey() final;
 };
 
 #endif

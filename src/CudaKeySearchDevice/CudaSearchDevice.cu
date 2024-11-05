@@ -2,7 +2,7 @@
 #include <cuda_runtime.h>
 #include <device_launch_parameters.h>
 #include "KeySearchTypes.h"
-#include "CudaKeySearchDevice.h"
+#include "CudaSearchDevice.h"
 
 #include "ptx.cuh"
 #include "secp256k1.cuh"
