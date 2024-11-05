@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <map>
 #include "CryptoUtil.h"
 
@@ -71,7 +72,7 @@ std::string Base58::toBase58(const secp256k1::uint256 &x)
 
 	secp256k1::uint256 value = x;
 
-	while(!value.isZero()) {
+    while(!value.isZero()) {
 		secp256k1::uint256 digit = value.mod(58);
 		int digitInt = digit.toInt32();
 
@@ -79,6 +80,22 @@ std::string Base58::toBase58(const secp256k1::uint256 &x)
 
 		value = value.div(58);
 	}
+
+	// handle when leading bytes are zero
+	std::string hex = x.toString();
+	std::string hash = hex.substr(hex.length() - 48, 48); // Extract the last 48 characters for hash and checksum
+	int zeroBytes = 0;
+	
+	for (int i=0; i<hash.length(); i+=2) {
+		if(hash.substr(i, 2) == "00") {
+			zeroBytes++;
+		} else {
+			// on the first non zero byte, exit. We just want to handle leading bytes
+			break;
+		}
+	}
+	
+	s.insert(0, zeroBytes, '1'); // Insert "1" for each leading zero
 
 	return s;
 }
