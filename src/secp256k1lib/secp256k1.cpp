@@ -689,7 +689,7 @@ uint256 secp256k1::multiplyModN(const uint256 &a, const uint256 &b)
 	return r;
 }
 
-std::string secp256k1::uint256::toString(int base)
+std::string secp256k1::uint256::toString(int base) const
 {
 	if (base == 16) {
 		std::string s = "";
@@ -702,14 +702,14 @@ std::string secp256k1::uint256::toString(int base)
 		}
 
 		return s;
-	} else if (base == 10) {
+	} else if (base == 10 || base == 2) {
 		// Convert to decimal
 		uint256 temp = *this;
 		std::string s = "";
 		while (!temp.isZero()) {
-				uint32_t remainder = (temp % 10).toInt32();
+				uint32_t remainder = (temp % base).toInt32();
 				s = std::to_string(remainder) + s;
-				temp = temp / 10;
+				temp = temp / base;
 		}
 		return s.empty() ? "0" : s;
 	} else {

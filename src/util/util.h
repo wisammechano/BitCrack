@@ -24,7 +24,7 @@ uint64_t getSystemTime();
 void sleep(int seconds);
 
 std::string formatThousands(uint64_t x);
-std::string formatThousands(secp256k1::uint256 &x);
+std::string formatThousands(const secp256k1::uint256 &x);
 
 std::string formatSeconds(unsigned int seconds);
 std::string formatEta(uint64_t n);
