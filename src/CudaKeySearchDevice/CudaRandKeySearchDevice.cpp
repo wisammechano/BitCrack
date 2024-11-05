@@ -4,13 +4,14 @@
 #include "cudabridge.h"
 #include "AddressUtil.h"
 
-void CudaRandKeySearchDevice::init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride)
+void CudaRandKeySearchDevice::init(const secp256k1::uint256 &start, const secp256k1::uint256 &end, int compression, const secp256k1::uint256 &stride)
 {
     if(start.cmp(secp256k1::N) >= 0) {
         throw KeySearchException("Starting key is out of range");
     }
 
     _startExponent = start;
+    _endExponent = end;
 
     _compression = compression;
 

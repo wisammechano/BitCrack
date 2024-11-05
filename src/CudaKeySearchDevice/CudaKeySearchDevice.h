@@ -20,7 +20,7 @@ private:
 public:
     using CudaSearchDevice::CudaSearchDevice;
     
-    void init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride) final;
+    void init(const secp256k1::uint256 &start, const secp256k1::uint256 &end, int compression, const secp256k1::uint256 &stride) final;
 
     void doStep() final;
 

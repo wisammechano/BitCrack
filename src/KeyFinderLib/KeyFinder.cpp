@@ -134,7 +134,7 @@ void KeyFinder::init()
 {
     Logger::log(LogLevel::Info, "Initializing " + _device->getDeviceName());
 
-    _device->init(_startKey, _compression, _stride);
+    _device->init(_startKey, _endKey, _compression, _stride);
 }
 
 

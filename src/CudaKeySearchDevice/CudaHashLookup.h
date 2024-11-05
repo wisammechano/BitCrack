@@ -2,6 +2,7 @@
 #define _HASH_LOOKUP_HOST_H
 
 #include <cuda_runtime.h>
+#include <vector>
 
 class CudaHashLookup {
 

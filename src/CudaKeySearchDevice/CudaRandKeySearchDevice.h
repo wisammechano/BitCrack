@@ -14,12 +14,13 @@ private:
     uint32_t getPrivateKeyOffset(int thread, int block, int point) final;
 
     secp256k1::uint256 _startExponent;
+    secp256k1::uint256 _endExponent;
 
 
 public:
     using CudaSearchDevice::CudaSearchDevice;
 
-    void init(const secp256k1::uint256 &start, int compression, const secp256k1::uint256 &stride) final;
+    void init(const secp256k1::uint256 &start, const secp256k1::uint256 &end, int compression, const secp256k1::uint256 &stride) final;
 
     void doStep() final;
 
