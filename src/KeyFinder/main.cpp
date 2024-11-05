@@ -613,7 +613,7 @@ int main(int argc, char **argv)
             } else if(optArg.equals("", "--continue")) {
                 _config.checkpointFile = optArg.arg;
                 if(_config.random) {
-                    throw std::string("Can't use --random with --continue");
+                    throw std::string("Can't use --continue with --random");
                 }
             } else if(optArg.equals("", "--keyspace")) {
                 secp256k1::uint256 start;
