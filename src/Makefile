@@ -1,6 +1,6 @@
 
 CUR_DIR=$(shell pwd)
-DIRS=util AddressUtil CmdParse CryptoUtil KeyFinderLib CLKeySearchDevice CudaKeySearchDevice cudaMath clUtil cudaUtil secp256k1lib Logger embedcl
+DIRS=util AddressUtil CmdParse CryptoUtil KeyFinderLib CLKeySearchDevice CudaKeySearchDevice cudaMath clUtil cudaUtil secp256k1lib Logger embedcl Kangaroo
 
 INCLUDE = $(foreach d, $(DIRS), -I$(CUR_DIR)/$d)
 
@@ -10,7 +10,11 @@ LIBS+=-L$(LIBDIR)
 
 # C++ options
 CXX=g++
-CXXFLAGS=-O2 -std=c++11
+ifdef DEBUG
+CXXFLAGS=-g -std=c++11 -Wformat
+else
+CXXFLAGS=-O2 -std=c++11 -Wformat
+endif
 
 # CUDA variables
 # Default compute capability
@@ -22,7 +26,11 @@ NVIDIA_COMPUTE_CAP := $(shell nvidia-smi --query-gpu=compute_cap --format=csv,no
 COMPUTE_CAP := $(if $(USE_COMPUTE_CAP),$(USE_COMPUTE_CAP),$(if $(NVIDIA_COMPUTE_CAP),$(NVIDIA_COMPUTE_CAP),$(DEFAULT_COMPUTE_CAP)))
 
 NVCC=nvcc
+ifdef DEBUG
+NVCCFLAGS=-G -std=c++11 -gencode=arch=compute_${COMPUTE_CAP},code=\"sm_${COMPUTE_CAP}\" -Xptxas="-v" --compiler-options "${CXXFLAGS}"
+else
 NVCCFLAGS=-std=c++11 -gencode=arch=compute_${COMPUTE_CAP},code=\"sm_${COMPUTE_CAP}\" -Xptxas="-v" -Xcompiler "${CXXFLAGS}"
+endif
 CUDA_HOME=/usr/local/cuda
 CUDA_LIB=${CUDA_HOME}/lib64
 CUDA_INCLUDE=${CUDA_HOME}/include
@@ -49,7 +57,7 @@ export OPENCL_INCLUDE
 export BUILD_OPENCL
 export BUILD_CUDA
 
-TARGETS=dir_addressutil dir_cmdparse dir_cryptoutil dir_keyfinderlib dir_keyfinder dir_secp256k1lib dir_util dir_logger dir_addrgen
+TARGETS=dir_kangaroo dir_addressutil dir_cmdparse dir_cryptoutil dir_keyfinderlib dir_keyfinder dir_secp256k1lib dir_util dir_logger dir_addrgen
 
 ifeq ($(BUILD_CUDA),1)
 	TARGETS:=${TARGETS} dir_cudaKeySearchDevice dir_cudautil
@@ -119,6 +127,9 @@ dir_addrgen:	dir_cmdparse dir_addressutil dir_secp256k1lib
 dir_clunittest:	dir_clutil
 	make --directory CLUnitTests
 
+dir_kangaroo:
+	make --directory Kangaroo
+
 clean:
 	make --directory AddressUtil clean
 	make --directory CmdParse clean
@@ -136,5 +147,6 @@ clean:
 	make --directory embedcl clean
 	make --directory CLUnitTests clean
 	make --directory AddrGen clean
+	make --directory Kangaroo clean
 	rm -rf ${LIBDIR}
 	rm -rf ${BINDIR}
